@@ -31,10 +31,10 @@ func TestPitchDetection(t *testing.T) {
 		{982.246827, 0.995798},
 	}
 
-	buff := [testBuffLen]float32{}
+	buff := [testBuffLen]float64{}
 	for i, sample := range s.Samples() {
 		// Copy samples to buffer
-		buff[i%len(buff)] = float32(sample)
+		buff[i%len(buff)] = float64(sample)
 
 		// end of buffer
 		if i%len(buff) == len(buff)-1 {

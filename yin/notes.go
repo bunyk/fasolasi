@@ -1,5 +1,10 @@
 package yin
 
+type note struct {
+	Frequency float64
+	Name      string
+}
+
 var notes = []note{
 	{-1.0, "pause"},
 	{587.33, "D (5)"},

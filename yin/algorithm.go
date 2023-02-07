@@ -23,27 +23,18 @@ import (
 // const buffLen int = 22050
 const buffLen int = 11025
 
-type note struct {
-	Frequency float64
-	Name      string
-}
-
 func JustTest(buffer []float64) {
-	var buff [buffLen]float32
+	var buff [buffLen]float64
 	for i := range buff {
-		buff[i] = float32(buffer[len(buffer)-buffLen+i])
+		buff[i] = buffer[len(buffer)-buffLen+i]
 	}
 	frequency, probability := FindMainFrequency(&buff)
 	note := guessNote(frequency)
 	fmt.Printf("%d Main Frequency: %f, %s - Probability: %f \n", len(buffer), frequency, note.Name, probability)
 }
 
-func FindMainFrequency(buff *[buffLen]float32) (frequency float64, probability float64) {
-	//arr :=  [YIN_SAMPLING_RATE / 2]float64{}
-	//yin := Yin{0,0, arr, 0.0, 0.0}
-	yin := Yin{}
-	//bufferSize := 44100
-	yin.YinInit(buffLen, 0.05)
+func FindMainFrequency(buff *[buffLen]float64) (frequency float64, probability float64) {
+	yin := NewYin(buffLen, 0.05)
 	frequency = yin.YinGetPitch(buff)
 	probability = yin.YinGetProbability()
 	return frequency, probability
@@ -64,6 +55,15 @@ type Yin struct {
 }
 
 // threshold  Allowed uncertainty (e.g 0.05 will return a pitch with ~95% probability)
+func NewYin(bufferSize int, threshold float64) Yin {
+	return Yin{
+		bufferSize:     bufferSize,
+		halfBufferSize: bufferSize / 2,
+		threshold:      threshold,
+	}
+}
+
+/* Not used, but maybe will need it to clean buffers, etc...
 func (Y *Yin) YinInit(bufferSize int, threshold float64) {
 	// Initialise the fields of the Yin structure passed in.
 	Y.bufferSize = bufferSize
@@ -73,14 +73,14 @@ func (Y *Yin) YinInit(bufferSize int, threshold float64) {
 
 	// Allocate the autocorellation buffer and initialise it to zero.
 	Y.yinBuffer = [BUFF_SIZE / 2]float64{}
-}
+} */
 
 // Runs the Yin pitch detection algortihm
 //
 //	buffer       - Buffer of samples to analyse
 //
 // return pitchInHertz - Fundamental frequency of the signal in Hz. Returns -1 if pitch can't be found
-func (Y *Yin) YinGetPitch(buffer *[BUFF_SIZE]float32) (pitchInHertz float64) {
+func (Y *Yin) YinGetPitch(buffer *[BUFF_SIZE]float64) (pitchInHertz float64) {
 	//tauEstimate int      := -1
 	pitchInHertz = -1
 
@@ -112,7 +112,7 @@ func (Y *Yin) YinGetProbability() (probability float64) {
 //
 // This is the Yin algorithms tweak on autocorellation. Read http://audition.ens.fr/adc/pdf/2002_JASA_YIN.pdf
 // for more details on what is in here and why it's done this way.
-func (Y *Yin) yinDifference(buffer *[BUFF_SIZE]float32) {
+func (Y *Yin) yinDifference(buffer *[BUFF_SIZE]float64) {
 	// Calculate the difference for difference shift values (tau) for the half of the samples.
 	for tau := 0; tau < Y.halfBufferSize; tau++ {
 
