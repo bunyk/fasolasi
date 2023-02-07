@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/bunyk/fasolasi/ear"
@@ -18,7 +19,7 @@ const HEIGHT = 768
 
 func run() {
 	cfg := pixelgl.WindowConfig{
-		Title:  "Pixel Rocks!",
+		Title:  "FaSoLaSi",
 		Bounds: pixel.R(0, 0, WIDTH, HEIGHT),
 		VSync:  true,
 	}
@@ -38,29 +39,35 @@ func run() {
 		buf := visualizer.Buffer()
 		pitch := detector.GetPitch(buf)
 		detector.Clean()
-		_, nn := notes.GuessNote(pitch)
+		note, nn := notes.GuessNote(pitch)
+		if nn > 0 {
+			fmt.Println(pitch, note, nn)
+		}
 
 		win.Clear(colornames.Whitesmoke)
 
 		lineGraph(win, colornames.Blue, buf)
-		drawNote(win, nn)
+		drawNote(win, note.Line, note.Name)
 		win.Update()
 	}
 }
 
-func drawNote(t pixel.Target, num int) {
+const noteRadius = 20
+
+func drawNote(t pixel.Target, line int, name string) {
 	imd := imdraw.New(nil)
 	imd.Color = colornames.Black
-	for i := 1; i < 50; i += 2 {
+	y := HEIGHT/2 - noteRadius*4
+	for i := 0; i <= 8; i += 2 {
 		imd.Push(
-			pixel.V(0, float64(i*HEIGHT/50)),
-			pixel.V(WIDTH, float64(i*HEIGHT/50)),
+			pixel.V(0, float64(y+i*noteRadius)),
+			pixel.V(WIDTH, float64(y+i*noteRadius)),
 		)
 		imd.Line(1)
 	}
-	if num > 0 {
-		imd.Push(pixel.V(WIDTH/2, float64(num*HEIGHT/50)))
-		imd.Circle(30, 5)
+	if name != "pause" {
+		imd.Push(pixel.V(WIDTH/2, float64(y+line*noteRadius)))
+		imd.Circle(noteRadius, 0)
 	}
 	imd.Draw(t)
 }
