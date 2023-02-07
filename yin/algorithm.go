@@ -1,7 +1,6 @@
 // Pitch Detection Algorithm
 //
-// YIN_algorithm.go - Reads a mono 16 bits wav  file and detects the main pitch of the
-//
+// Given an audio sample buffer detects the main pitch of the
 //	audio, and the probability of it being correct.
 //	With this information you can detect the note that is played.
 //
@@ -13,123 +12,20 @@
 // Email:   joaonunocarv@gmail.com
 // Date:    2017.12.9
 // License: MIT OpenSource License
+
 package yin
 
 import (
 	"fmt"
-	"os"
-
-	"github.com/unixpickle/wav"
 )
-
-const cInputFileName = "../morrowind2.wav"
 
 // const buffLen int = 44100
 // const buffLen int = 22050
-const buffLen int = 11025 / 4
+const buffLen int = 11025
 
 type note struct {
 	Frequency float64
 	Name      string
-}
-
-var notes = []note{
-	{-1.0, "pause"},
-	{587.33, "D (5)"},
-	{554.37, "C# (5)"},
-	{659.25, "E (5)"},
-	{698.46, "F (5)"},
-	{783.99, "G (5)"},
-	{880.00, "A (5)"},
-	{880.00, "A (5)"},
-	{987.77, "B/H (5)"},
-	{1046.50, "C (6)"},
-	{1174.66, "D (6)"},
-}
-
-func guessNote(frequency float64) note {
-	min := 0
-	max := len(notes) - 1
-	for {
-		if frequency <= notes[min].Frequency {
-			return notes[min]
-		}
-		if frequency >= notes[max].Frequency {
-			return notes[max]
-		}
-		if max-min <= 1 {
-			toMax := notes[max].Frequency - frequency
-			toMin := frequency - notes[min].Frequency
-			if toMax < toMin {
-				return notes[max]
-			}
-			return notes[min]
-		}
-		middle := (min + max) / 2
-		if frequency <= notes[middle].Frequency {
-			max = middle
-		} else {
-			min = middle
-		}
-	}
-
-}
-
-func main() {
-	if err := ErrMain(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
-func ErrMain() error {
-	s, err := wav.ReadSoundFile(cInputFileName)
-	if err != nil {
-		return err
-	}
-
-	//scale := 0.2
-	//wav.Volume(s, scale)
-
-	processSignal(s)
-
-	//return wav.WriteFile(s, cOutputFileName)
-	return nil
-}
-
-func processSignal(s wav.Sound /*, bufSize int, func functionToApply() */) {
-
-	// Samples rate é de 44100.
-	fmt.Printf("Sample rate:  %d\n", s.SampleRate())
-
-	//buff := [buffLen]wav.Sample{}
-	buff := [buffLen]float32{}
-	flag_even := true
-	j := 0
-	// for samples in samples:
-	for i, sample := range s.Samples() {
-		// Copy to the array the samples of 1 second, 44100 samples.
-		buff[j] = float32(sample)
-
-		//if j == 44100 - 1{
-		if j == buffLen-1 {
-
-			if flag_even == true {
-
-				// Process the buffer with the algorithm of YIN for frequency detection.
-				frequency, _ := FindMainFrequency(&buff)
-				note := guessNote(frequency)
-				fmt.Printf("%0.2f %0.2f %0.2f\n", float64(i)/float64(s.SampleRate()), note.Frequency, frequency)
-				// fmt.Printf("Seconds: %0.2f - Main Frequency: %f, %s - Probability: %f \n", float64(i)/float64(s.SampleRate()), frequency, guessNoteName(frequency), probability)
-				buff = [buffLen]float32{}
-				flag_even = false
-			} else {
-				flag_even = true
-			}
-			j = 0
-		}
-		j++
-	}
 }
 
 func JustTest(buffer []float64) {
@@ -147,9 +43,7 @@ func FindMainFrequency(buff *[buffLen]float32) (frequency float64, probability f
 	//yin := Yin{0,0, arr, 0.0, 0.0}
 	yin := Yin{}
 	//bufferSize := 44100
-	bufferSize := buffLen // 11025
-	threashold := 0.05
-	yin.YinInit(bufferSize, threashold)
+	yin.YinInit(buffLen, 0.05)
 	frequency = yin.YinGetPitch(buff)
 	probability = yin.YinGetProbability()
 	return frequency, probability

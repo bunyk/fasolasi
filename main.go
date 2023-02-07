@@ -92,8 +92,8 @@ var visualizer = &Visualizer{
 
 func main() {
 	// First, some configuration
-	sampleRate := beep.SampleRate(144100) // Choose sample rate
-	numChannels := 1                      // 1 - mono, 2 - stereo
+	sampleRate := beep.SampleRate(44100) // Choose sample rate
+	numChannels := 1                     // 1 - mono, 2 - stereo
 
 	microphone.Init() // without this you will get "PortAudio not initialized" error later
 
