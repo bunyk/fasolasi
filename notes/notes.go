@@ -1,4 +1,4 @@
-package yin
+package notes
 
 type note struct {
 	Frequency float64
@@ -49,23 +49,23 @@ var notes = []note{
 	{2093.00, "39"},
 }
 
-func guessNote(frequency float64) note {
+func GuessNote(frequency float64) (note, int) {
 	min := 0
 	max := len(notes) - 1
 	for {
 		if frequency <= notes[min].Frequency {
-			return notes[min]
+			return notes[min], min
 		}
 		if frequency >= notes[max].Frequency {
-			return notes[max]
+			return notes[max], max
 		}
 		if max-min <= 1 {
 			toMax := notes[max].Frequency - frequency
 			toMin := frequency - notes[min].Frequency
 			if toMax < toMin {
-				return notes[max]
+				return notes[max], max
 			}
-			return notes[min]
+			return notes[min], min
 		}
 		middle := (min + max) / 2
 		if frequency <= notes[middle].Frequency {
