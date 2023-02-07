@@ -32,19 +32,16 @@ func TestPitchDetection(t *testing.T) {
 		{982.246827, 0.995798},
 	}
 
-	buff := make([]float64, testBuffLen)
-	for i, sample := range s.Samples() {
-		// Copy samples to buffer
-		buff[i%len(buff)] = float64(sample)
-
-		// end of buffer
-		if i%len(buff) == len(buff)-1 {
-			// Process the buffer with the algorithm of YIN for frequency detection.
-			frequency := yin.GetPitch(buff)
-			probability := yin.GetProbability()
-			yin.Clean()
-			assert.InDelta(t, expected[i/testBuffLen][0], frequency, 1e-6)
-			assert.InDelta(t, expected[i/testBuffLen][1], probability, 1e-6)
-		}
+	samples := make([]float64, len(s.Samples()))
+	for i, s := range s.Samples() { // it's a slice of wav.Sample, which is just alias for float64. Why?!?!
+		samples[i] = float64(s)
+	}
+	for i, exp := range expected {
+		// Process the buffer with the algorithm of YIN for frequency detection.
+		frequency := yin.GetPitch(samples[i*testBuffLen : (i+1)*testBuffLen])
+		probability := yin.GetProbability()
+		yin.Clean()
+		assert.InDelta(t, exp[0], frequency, 1e-6)
+		assert.InDelta(t, exp[1], probability, 1e-6)
 	}
 }

@@ -14,8 +14,6 @@ import (
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
-
-	"github.com/bunyk/fasolasi/yin"
 )
 
 const BUFFER_SIZE = 512
@@ -37,7 +35,6 @@ func run() {
 		win.Clear(colornames.Whitesmoke)
 
 		buf := visualizer.Buffer()
-		yin.JustTest(buf)
 
 		lineGraph(win, colornames.Blue, buf)
 		win.Update()

@@ -15,25 +15,6 @@
 
 package yin
 
-import (
-	"fmt"
-)
-
-func JustTest(buffer []float64) {
-	const buffLen int = 11025
-	yin := NewYin(44100, buffLen, 0.05)
-	frequency := yin.GetPitch(buffer[len(buffer)-buffLen:])
-	probability := yin.GetProbability()
-	note := guessNote(frequency)
-	if frequency > 0 {
-		fmt.Printf("Frequency: %f, %s - Probability: %f \n", frequency, note.Name, probability)
-	}
-}
-
-func FindMainFrequency(buff []float64) (frequency float64, probability float64) {
-	return frequency, probability
-}
-
 type Yin struct {
 	samplingRate   float64
 	bufferSize     int       // Size of the buffer to process.
