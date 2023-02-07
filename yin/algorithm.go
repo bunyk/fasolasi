@@ -19,83 +19,71 @@ import (
 	"fmt"
 )
 
-// const buffLen int = 44100
-// const buffLen int = 22050
-const buffLen int = 11025
-
 func JustTest(buffer []float64) {
-	var buff [buffLen]float64
-	for i := range buff {
-		buff[i] = buffer[len(buffer)-buffLen+i]
-	}
-	frequency, probability := FindMainFrequency(&buff)
+	const buffLen int = 11025
+	yin := NewYin(44100, buffLen, 0.05)
+	frequency := yin.GetPitch(buffer[len(buffer)-buffLen:])
+	probability := yin.GetProbability()
 	note := guessNote(frequency)
-	fmt.Printf("%d Main Frequency: %f, %s - Probability: %f \n", len(buffer), frequency, note.Name, probability)
+	if frequency > 0 {
+		fmt.Printf("Frequency: %f, %s - Probability: %f \n", frequency, note.Name, probability)
+	}
 }
 
-func FindMainFrequency(buff *[buffLen]float64) (frequency float64, probability float64) {
-	yin := NewYin(buffLen, 0.05)
-	frequency = yin.YinGetPitch(buff)
-	probability = yin.YinGetProbability()
+func FindMainFrequency(buff []float64) (frequency float64, probability float64) {
 	return frequency, probability
 }
 
-//################################################################
-
-const YIN_SAMPLING_RATE int = 44100
-const YIN_DEFAULT_THRESHOLD float64 = 0.15
-const BUFF_SIZE int = buffLen // 11025 // 22050
-
 type Yin struct {
-	bufferSize     int                    // Size of the buffer to process.
-	halfBufferSize int                    // Half of buffer size.
-	yinBuffer      [BUFF_SIZE / 2]float64 // Buffer that stores the results of the intermediate processing steps of the algorithm
-	probability    float64                // Probability that the pitch found is correct as a decimal (i.e 0.85 is 85%)
-	threshold      float64                // Allowed uncertainty in the result as a decimal (i.e 0.15 is 15%)
+	samplingRate   float64
+	bufferSize     int       // Size of the buffer to process.
+	halfBufferSize int       // Half of buffer size.
+	yinBuffer      []float64 // Buffer that stores the results of the intermediate processing steps of the algorithm
+	probability    float64   // Probability that the pitch found is correct as a decimal (i.e 0.85 is 85%)
+	threshold      float64   // Allowed uncertainty in the result as a decimal (i.e 0.15 is 15%)
 }
 
-// threshold  Allowed uncertainty (e.g 0.05 will return a pitch with ~95% probability)
-func NewYin(bufferSize int, threshold float64) Yin {
+// threshold  - Allowed uncertainty (e.g 0.05 will return a pitch with ~95% probability)
+func NewYin(samplingRate float64, bufferSize int, threshold float64) Yin {
 	return Yin{
+		samplingRate:   samplingRate,
 		bufferSize:     bufferSize,
 		halfBufferSize: bufferSize / 2,
+		yinBuffer:      make([]float64, bufferSize/2),
 		threshold:      threshold,
 	}
 }
 
-/* Not used, but maybe will need it to clean buffers, etc...
-func (Y *Yin) YinInit(bufferSize int, threshold float64) {
-	// Initialise the fields of the Yin structure passed in.
-	Y.bufferSize = bufferSize
-	Y.halfBufferSize = bufferSize / 2
-	Y.probability = 0.0
-	Y.threshold = threshold
+func (y *Yin) Clean() {
+	y.probability = 0.0
 
 	// Allocate the autocorellation buffer and initialise it to zero.
-	Y.yinBuffer = [BUFF_SIZE / 2]float64{}
-} */
+	for i := range y.yinBuffer {
+		y.yinBuffer[i] = 0
+	}
+}
 
 // Runs the Yin pitch detection algortihm
 //
 //	buffer       - Buffer of samples to analyse
 //
 // return pitchInHertz - Fundamental frequency of the signal in Hz. Returns -1 if pitch can't be found
-func (Y *Yin) YinGetPitch(buffer *[BUFF_SIZE]float64) (pitchInHertz float64) {
+func (y *Yin) GetPitch(buffer []float64) (pitchInHertz float64) {
 	//tauEstimate int      := -1
 	pitchInHertz = -1
 
-	// Step 1: CalcuYinGetPitchlates the squared difference of the signal with a shifted version of itself.
-	Y.yinDifference(buffer)
+	// Step 1: Calculates the squared difference of the signal with a shifted version of itself.
+	y.yinDifference(buffer)
 
 	// Step 2: Calculate the cumulative mean on the normalised difference calculated in step 1.
-	Y.yinCumulativeMeanNormalizedDifference()
+	y.yinCumulativeMeanNormalizedDifference()
 
 	// Step 3: Search through the normalised cumulative mean array and find values that are over the threshold.
-	tauEstimate := Y.yinAbsoluteThreshold()
+	tauEstimate := y.yinAbsoluteThreshold()
 
 	// Step 5: Interpolate the shift value (tau) to improve the pitch estimate.
 	if tauEstimate != -1 {
-		pitchInHertz = float64(YIN_SAMPLING_RATE) / Y.yinParabolicInterpolation(tauEstimate)
+		pitchInHertz = y.samplingRate / y.yinParabolicInterpolation(tauEstimate)
 	}
 
 	return pitchInHertz
@@ -103,8 +91,8 @@ func (Y *Yin) YinGetPitch(buffer *[BUFF_SIZE]float64) (pitchInHertz float64) {
 
 // Certainty of the pitch found
 // return ptobability - Returns the certainty of the note found as a decimal (i.e 0.3 is 30%)
-func (Y *Yin) YinGetProbability() (probability float64) {
-	return Y.probability
+func (y *Yin) GetProbability() (probability float64) {
+	return y.probability
 }
 
 // Step 1: Calculates the squared difference of the signal with a shifted version of itself.
@@ -112,15 +100,15 @@ func (Y *Yin) YinGetProbability() (probability float64) {
 //
 // This is the Yin algorithms tweak on autocorellation. Read http://audition.ens.fr/adc/pdf/2002_JASA_YIN.pdf
 // for more details on what is in here and why it's done this way.
-func (Y *Yin) yinDifference(buffer *[BUFF_SIZE]float64) {
+func (y *Yin) yinDifference(buffer []float64) {
 	// Calculate the difference for difference shift values (tau) for the half of the samples.
-	for tau := 0; tau < Y.halfBufferSize; tau++ {
+	for tau := 0; tau < y.halfBufferSize; tau++ {
 
 		// Take the difference of the signal with a shifted version of itself, then square it.
 		// (This is the Yin algorithm's tweak on autocorellation)
-		for i := 0; i < Y.halfBufferSize; i++ {
+		for i := 0; i < y.halfBufferSize; i++ {
 			delta := float64(buffer[i]) - float64(buffer[i+tau])
-			Y.yinBuffer[tau] += delta * delta
+			y.yinBuffer[tau] += delta * delta
 		}
 	}
 }
@@ -129,30 +117,30 @@ func (Y *Yin) yinDifference(buffer *[BUFF_SIZE]float64) {
 //
 // This goes through the Yin autocorellation values and finds out roughly where shift is which
 // produced the smallest difference
-func (Y *Yin) yinCumulativeMeanNormalizedDifference() {
+func (y *Yin) yinCumulativeMeanNormalizedDifference() {
 	runningSum := 0.0
-	Y.yinBuffer[0] = 1
+	y.yinBuffer[0] = 1
 
 	// Sum all the values in the autocorellation buffer and nomalise the result, replacing
 	// the value in the autocorellation buffer with a cumulative mean of the normalised difference.
-	for tau := 1; tau < Y.halfBufferSize; tau++ {
-		runningSum += Y.yinBuffer[tau]
-		Y.yinBuffer[tau] *= float64(tau) / runningSum
+	for tau := 1; tau < y.halfBufferSize; tau++ {
+		runningSum += y.yinBuffer[tau]
+		y.yinBuffer[tau] *= float64(tau) / runningSum
 	}
 }
 
 // Step 3: Search through the normalised cumulative mean array and find values that are over the threshold
 // return Shift (tau) which caused the best approximate autocorellation. -1 if no suitable value is found
 // over the threshold.
-func (Y *Yin) yinAbsoluteThreshold() int {
+func (y *Yin) yinAbsoluteThreshold() int {
 
 	var tau int
 
 	// Search through the array of cumulative mean values, and look for ones that are over the threshold
 	// The first two positions in yinBuffer are always so start at the third (index 2)
-	for tau = 2; tau < Y.halfBufferSize; tau++ {
-		if Y.yinBuffer[tau] < Y.threshold {
-			for (tau+1 < Y.halfBufferSize) && (Y.yinBuffer[tau+1] < Y.yinBuffer[tau]) {
+	for tau = 2; tau < y.halfBufferSize; tau++ {
+		if y.yinBuffer[tau] < y.threshold {
+			for (tau+1 < y.halfBufferSize) && (y.yinBuffer[tau+1] < y.yinBuffer[tau]) {
 				tau++
 			}
 
@@ -165,15 +153,15 @@ func (Y *Yin) yinAbsoluteThreshold() int {
 			 *
 			 * Since we want the periodicity and and not aperiodicity:
 			 * periodicity = 1 - aperiodicity */
-			Y.probability = 1 - Y.yinBuffer[tau]
+			y.probability = 1 - y.yinBuffer[tau]
 			break
 		}
 	}
 
 	// if no pitch found, tau => -1
-	if tau == Y.halfBufferSize || Y.yinBuffer[tau] >= Y.threshold {
+	if tau == y.halfBufferSize || y.yinBuffer[tau] >= y.threshold {
 		tau = -1
-		Y.probability = 0
+		y.probability = 0
 	}
 
 	return tau
@@ -185,7 +173,7 @@ func (Y *Yin) yinAbsoluteThreshold() int {
 // The 'best' shift value for autocorellation is most likely not an interger shift of the signal.
 // As we only autocorellated using integer shifts we should check that there isn't a better fractional
 // shift value.
-func (Y *Yin) yinParabolicInterpolation(tauEstimate int) float64 {
+func (y *Yin) yinParabolicInterpolation(tauEstimate int) float64 {
 
 	var betterTau float64
 	var x0 int
@@ -199,7 +187,7 @@ func (Y *Yin) yinParabolicInterpolation(tauEstimate int) float64 {
 	}
 
 	// Calculate the second polynomial coeffcient based on the current estimate of tau.
-	if tauEstimate+1 < Y.halfBufferSize {
+	if tauEstimate+1 < y.halfBufferSize {
 		x2 = tauEstimate + 1
 	} else {
 		x2 = tauEstimate
@@ -207,22 +195,22 @@ func (Y *Yin) yinParabolicInterpolation(tauEstimate int) float64 {
 
 	// Algorithm to parabolically interpolate the shift value tau to find a better estimate.
 	if x0 == tauEstimate {
-		if Y.yinBuffer[tauEstimate] <= Y.yinBuffer[x2] {
+		if y.yinBuffer[tauEstimate] <= y.yinBuffer[x2] {
 			betterTau = float64(tauEstimate)
 		} else {
 			betterTau = float64(x2)
 		}
 	} else if x2 == tauEstimate {
-		if Y.yinBuffer[tauEstimate] <= Y.yinBuffer[x0] {
+		if y.yinBuffer[tauEstimate] <= y.yinBuffer[x0] {
 			betterTau = float64(tauEstimate)
 		} else {
 			betterTau = float64(x0)
 		}
 	} else {
 		var s0, s1, s2 float64
-		s0 = Y.yinBuffer[x0]
-		s1 = Y.yinBuffer[tauEstimate]
-		s2 = Y.yinBuffer[x2]
+		s0 = y.yinBuffer[x0]
+		s1 = y.yinBuffer[tauEstimate]
+		s2 = y.yinBuffer[x2]
 		// fixed AUBIO implementation, thanks to Karl Helgason:
 		// (2.0f * s1 - s2 - s0) was incorrectly multiplied with -1
 		betterTau = float64(tauEstimate) + (s2-s0)/(2*(2*s1-s2-s0))

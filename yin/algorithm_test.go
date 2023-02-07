@@ -8,8 +8,6 @@ import (
 	"github.com/unixpickle/wav"
 )
 
-const testBuffLen int = 11025
-
 func TestPitchDetection(t *testing.T) {
 	s, err := wav.ReadSoundFile("test.wav")
 	if err != nil {
@@ -17,6 +15,9 @@ func TestPitchDetection(t *testing.T) {
 	}
 
 	fmt.Printf("Sample rate:  %d\n", s.SampleRate()) // 44100
+
+	const testBuffLen int = 11025
+	yin := NewYin(float64(s.SampleRate()), testBuffLen, 0.05)
 
 	// frequencies and their probabilities in test.wav file
 	var expected = [][2]float64{
@@ -31,7 +32,7 @@ func TestPitchDetection(t *testing.T) {
 		{982.246827, 0.995798},
 	}
 
-	buff := [testBuffLen]float64{}
+	buff := make([]float64, testBuffLen)
 	for i, sample := range s.Samples() {
 		// Copy samples to buffer
 		buff[i%len(buff)] = float64(sample)
@@ -39,7 +40,9 @@ func TestPitchDetection(t *testing.T) {
 		// end of buffer
 		if i%len(buff) == len(buff)-1 {
 			// Process the buffer with the algorithm of YIN for frequency detection.
-			frequency, probability := FindMainFrequency(&buff)
+			frequency := yin.GetPitch(buff)
+			probability := yin.GetProbability()
+			yin.Clean()
 			assert.InDelta(t, expected[i/testBuffLen][0], frequency, 1e-6)
 			assert.InDelta(t, expected[i/testBuffLen][1], probability, 1e-6)
 		}
