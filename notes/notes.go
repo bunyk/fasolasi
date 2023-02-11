@@ -1,63 +1,126 @@
 package notes
 
-type note struct {
+import (
+	"fmt"
+	"io"
+	"os"
+)
+
+type Pitch struct {
 	Frequency float64
 	Name      string
-	Line      int // even - on line, odd - between lines
+	Bottom    float64 // Position relative to first line, in line intervals
+	Height    float64 // Height (of rectangle representing key) in line intervals
 }
 
-var notes = []note{
-	{-1.0, "pause", 0},
-	{523.25, "C (5)", -2},
-	{554.37, "C# (5)", -2},
-	{587.33, "D (5)", -1},
-	{622.25, "D# (5)", -1},
-	{659.25, "E (5)", 0},
-	{698.46, "F (5)", 1},
-	{739.99, "F#", 1},
-	{783.99, "G (5)", 2},
-	{830.61, "G# (5)", 2},
-	{880.00, "A (5)", 3},
-	{932.33, "Bb/Hb", 4},
-	{987.77, "B/H (5)", 4},
-	{1046.50, "C (6)", 5},
-	{1108.73, "C# (6)", 5},
-	{1174.66, "D (6)", 6},
-	{1244.51, "D# (6)", 6},
-	{1318.51, "E (6)", 7},
-	{1396.91, "F (6)", 8},
-	{1479.98, "33", 10}, // TODO
-	{1567.98, "34", 10},
-	{1661.22, "35", 10},
-	{1760.00, "36", 10},
-	{1864.66, "37", 10},
-	{1975.53, "38", 10},
-	{2093.00, "39", 10},
+var FluteRange []Pitch
+var octave = []Pitch{
+	{523.25, "c", -1, 0.5},
+	{554.37, "cis", -0.75, 0.25},
+	{587.33, "d", -0.5, 0.5},
+	{622.25, "dis", -0.25, 0.25},
+	{659.25, "e", 0, 0.5},
+	{698.46, "f", 0.5, 0.5},
+	{739.99, "fis", 0.75, 0.25},
+	{783.99, "g", 1, 0.5},
+	{830.61, "gis", 1.25, 0.25},
+	{880.00, "a", 1.5, 0.5},
+	{932.33, "bes", 1.75, 0.25},
+	{987.77, "b", 2, 0.5},
 }
 
-func GuessNote(frequency float64) (note, int) {
+var pitchByName map[string]Pitch
+
+func init() {
+	FluteRange = append(FluteRange, Pitch{-1.0, "p", 0, 0}) // pause
+	FluteRange = append(FluteRange, octave...)
+	for _, n := range octave {
+		FluteRange = append(FluteRange, Pitch{
+			Frequency: n.Frequency * 2.0,
+			Name:      n.Name + "'",
+			Bottom:    n.Bottom + 3.5,
+			Height:    n.Height,
+		})
+	}
+	FluteRange = append(FluteRange, Pitch{2093.00, "c''", 6, 0.5})
+
+	pitchByName = make(map[string]Pitch)
+	for _, p := range FluteRange {
+		pitchByName[p.Name] = p
+	}
+}
+
+func GuessNote(frequency float64) (Pitch, int) {
 	min := 0
-	max := len(notes) - 1
+	max := len(FluteRange) - 1
 	for {
-		if frequency <= notes[min].Frequency {
-			return notes[min], min
+		if frequency <= FluteRange[min].Frequency {
+			return FluteRange[min], min
 		}
-		if frequency >= notes[max].Frequency {
-			return notes[max], max
+		if frequency >= FluteRange[max].Frequency {
+			return FluteRange[max], max
 		}
 		if max-min <= 1 {
-			toMax := notes[max].Frequency - frequency
-			toMin := frequency - notes[min].Frequency
+			toMax := FluteRange[max].Frequency - frequency
+			toMin := frequency - FluteRange[min].Frequency
 			if toMax < toMin {
-				return notes[max], max
+				return FluteRange[max], max
 			}
-			return notes[min], min
+			return FluteRange[min], min
 		}
 		middle := (min + max) / 2
-		if frequency <= notes[middle].Frequency {
+		if frequency <= FluteRange[middle].Frequency {
 			max = middle
 		} else {
 			min = middle
 		}
 	}
+}
+
+type SongNote struct {
+	Pitch    Pitch
+	Time     float64
+	Duration float64
+}
+
+func (sn SongNote) End() float64 {
+	return sn.Time + sn.Duration
+}
+
+func NoteFromString(s string) (SongNote, error) {
+	p := pitchByName[s] // TODO: parse durations
+	if p.Name == "" {
+		return SongNote{}, fmt.Errorf("Unknown note: %#v", s)
+	}
+	return SongNote{
+		Pitch:    p,
+		Duration: 1.0,
+	}, nil
+}
+
+func ReadSong(filename string) (song []SongNote, err error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	var token string
+	time := 0.0
+	for {
+		_, err := fmt.Fscanf(f, "%s", &token)
+		if err != nil {
+			if err == io.EOF {
+				return song, nil
+			}
+			return nil, err
+		}
+		n, err := NoteFromString(token)
+		if err != nil {
+			return nil, err
+		}
+		n.Time = time
+		time += n.Duration
+		song = append(song, n)
+	}
+	return nil, nil
 }

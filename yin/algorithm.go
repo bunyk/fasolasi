@@ -49,7 +49,7 @@ func (y *Yin) Clean() {
 //	buffer       - Buffer of samples to analyse
 //
 // return pitchInHertz - Fundamental frequency of the signal in Hz. Returns -1 if pitch can't be found
-func (y *Yin) GetPitch(buffer []float64) (pitchInHertz float64) {
+func (y *Yin) GetPitch(buffer [][2]float64) (pitchInHertz float64) {
 	//tauEstimate int      := -1
 	pitchInHertz = -1
 
@@ -81,14 +81,14 @@ func (y *Yin) GetProbability() (probability float64) {
 //
 // This is the Yin algorithms tweak on autocorellation. Read http://audition.ens.fr/adc/pdf/2002_JASA_YIN.pdf
 // for more details on what is in here and why it's done this way.
-func (y *Yin) yinDifference(buffer []float64) {
+func (y *Yin) yinDifference(buffer [][2]float64) {
 	// Calculate the difference for difference shift values (tau) for the half of the samples.
 	for tau := 0; tau < y.halfBufferSize; tau++ {
 
 		// Take the difference of the signal with a shifted version of itself, then square it.
 		// (This is the Yin algorithm's tweak on autocorellation)
 		for i := 0; i < y.halfBufferSize; i++ {
-			delta := float64(buffer[i]) - float64(buffer[i+tau])
+			delta := buffer[i][0] - buffer[i+tau][0]
 			y.yinBuffer[tau] += delta * delta
 		}
 	}
