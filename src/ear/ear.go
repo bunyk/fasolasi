@@ -4,8 +4,9 @@ import (
 	"log"
 
 	"github.com/MarkKremer/microphone"
-	"github.com/bunyk/fasolasi/yin"
 	"github.com/faiface/beep"
+
+	"github.com/bunyk/fasolasi/src/yin"
 )
 
 type Ear struct {
@@ -19,7 +20,7 @@ func (e *Ear) listen() {
 	go func() {
 		for {
 			e.micStream.Stream(e.MicBuffer)
-			e.Pitch = e.pitchDetector.GetPitch(e.MicBuffer)
+			e.Pitch = e.pitchDetector.GetPitch2(e.MicBuffer)
 			e.pitchDetector.Clean()
 		}
 	}()

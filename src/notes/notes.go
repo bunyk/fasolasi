@@ -50,6 +50,13 @@ func init() {
 	}
 }
 
+func (p Pitch) HasAdditionalLine() bool {
+	if 0 <= p.Bottom && p.Bottom <= 4 {
+		return false // On existing lines
+	}
+	return int(p.Bottom*4)%4 == 0
+}
+
 func GuessNote(frequency float64) (Pitch, int) {
 	min := 0
 	max := len(FluteRange) - 1

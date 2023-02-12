@@ -49,12 +49,33 @@ func (y *Yin) Clean() {
 //	buffer       - Buffer of samples to analyse
 //
 // return pitchInHertz - Fundamental frequency of the signal in Hz. Returns -1 if pitch can't be found
-func (y *Yin) GetPitch(buffer [][2]float64) (pitchInHertz float64) {
+func (y *Yin) GetPitch(buffer []float64) (pitchInHertz float64) {
 	//tauEstimate int      := -1
 	pitchInHertz = -1
 
 	// Step 1: Calculates the squared difference of the signal with a shifted version of itself.
 	y.yinDifference(buffer)
+
+	// Step 2: Calculate the cumulative mean on the normalised difference calculated in step 1.
+	y.yinCumulativeMeanNormalizedDifference()
+
+	// Step 3: Search through the normalised cumulative mean array and find values that are over the threshold.
+	tauEstimate := y.yinAbsoluteThreshold()
+
+	// Step 5: Interpolate the shift value (tau) to improve the pitch estimate.
+	if tauEstimate != -1 {
+		pitchInHertz = y.samplingRate / y.yinParabolicInterpolation(tauEstimate)
+	}
+
+	return pitchInHertz
+}
+
+func (y *Yin) GetPitch2(buffer [][2]float64) (pitchInHertz float64) {
+	//tauEstimate int      := -1
+	pitchInHertz = -1
+
+	// Step 1: Calculates the squared difference of the signal with a shifted version of itself.
+	y.yinDifference2(buffer)
 
 	// Step 2: Calculate the cumulative mean on the normalised difference calculated in step 1.
 	y.yinCumulativeMeanNormalizedDifference()
@@ -81,7 +102,21 @@ func (y *Yin) GetProbability() (probability float64) {
 //
 // This is the Yin algorithms tweak on autocorellation. Read http://audition.ens.fr/adc/pdf/2002_JASA_YIN.pdf
 // for more details on what is in here and why it's done this way.
-func (y *Yin) yinDifference(buffer [][2]float64) {
+func (y *Yin) yinDifference(buffer []float64) {
+	// Calculate the difference for difference shift values (tau) for the half of the samples.
+	for tau := 0; tau < y.halfBufferSize; tau++ {
+
+		// Take the difference of the signal with a shifted version of itself, then square it.
+		// (This is the Yin algorithm's tweak on autocorellation)
+		for i := 0; i < y.halfBufferSize; i++ {
+			delta := buffer[i] - buffer[i+tau]
+			y.yinBuffer[tau] += delta * delta
+		}
+	}
+}
+
+// same, but for stereo buffer
+func (y *Yin) yinDifference2(buffer [][2]float64) {
 	// Calculate the difference for difference shift values (tau) for the half of the samples.
 	for tau := 0; tau < y.halfBufferSize; tau++ {
 
