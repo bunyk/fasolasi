@@ -9,7 +9,9 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/faiface/pixel/text"
 	"golang.org/x/image/colornames"
+	"golang.org/x/image/font/basicfont"
 
 	"github.com/bunyk/fasolasi/src/ear"
 	"github.com/bunyk/fasolasi/src/notes"
@@ -41,6 +43,10 @@ func run() {
 		log.Fatal(err)
 	}
 
+	basicAtlas := text.NewAtlas(basicfont.Face7x13, text.ASCII)
+	basicTxt := text.New(pixel.V(0, win.Bounds().H()/4-10), basicAtlas)
+	basicTxt.Color = colornames.Black
+
 	game := NewGame(song)
 
 	for !win.Closed() {
@@ -68,6 +74,9 @@ func run() {
 		drawNoteLines(win)
 		drawNotes(win, game.Song, game.Played, game.Duration)
 
+		basicTxt.Clear()
+		fmt.Fprintf(basicTxt, "%d", int(game.Score*100))
+		basicTxt.Draw(win, pixel.IM.Scaled(pixel.ZV, 4))
 		/* Draw note played
 		if name != "p" {
 			imd.Color = colornames.Black
@@ -128,11 +137,9 @@ func (g *Game) Update(note notes.Pitch) {
 	playingCorrectly := note == g.currentNote()
 	if playingCorrectly {
 		g.Score += g.Duration - oldDuration
-		// fmt.Println(g.Score)
 	}
 	if note.Name != "p" {
 		if len(g.Played) == 0 || g.Played[len(g.Played)-1].End() > 0 { // no note currently playing
-			fmt.Println("no note currently playing, creating new one")
 			g.Played = append(g.Played, playedNote{
 				SongNote: notes.SongNote{ // create new note
 					Time:     g.Duration,
@@ -142,7 +149,6 @@ func (g *Game) Update(note notes.Pitch) {
 				Correct: playingCorrectly,
 			})
 		} else if g.Played[len(g.Played)-1].Pitch != note || g.Played[len(g.Played)-1].Correct != playingCorrectly { // note changed
-			fmt.Println("note changed")
 			g.Played[len(g.Played)-1].Duration = g.Duration - g.Played[len(g.Played)-1].Time // end current one
 			g.Played = append(g.Played, playedNote{
 				SongNote: notes.SongNote{ // create new note
@@ -155,7 +161,6 @@ func (g *Game) Update(note notes.Pitch) {
 		}
 	} else { // no note
 		if len(g.Played) > 0 && g.Played[len(g.Played)-1].End() < 0 { // there is a note still playing
-			fmt.Println("there is a note still playing, stopping")
 			g.Played[len(g.Played)-1].Duration = g.Duration - g.Played[len(g.Played)-1].Time // end it
 		}
 	}
