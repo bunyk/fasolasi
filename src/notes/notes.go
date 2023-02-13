@@ -29,10 +29,12 @@ var octave = []Pitch{
 	{987.77, "b", 2, 0.5},
 }
 
+var Pause = Pitch{-1.0, "p", 0, 0}
+
 var pitchByName map[string]Pitch
 
 func init() {
-	FluteRange = append(FluteRange, Pitch{-1.0, "p", 0, 0}) // pause
+	FluteRange = append(FluteRange, Pause)
 	FluteRange = append(FluteRange, octave...)
 	for _, n := range octave {
 		FluteRange = append(FluteRange, Pitch{
@@ -91,6 +93,9 @@ type SongNote struct {
 }
 
 func (sn SongNote) End() float64 {
+	if sn.Duration < 0 {
+		return -1.0 // Endless :)
+	}
 	return sn.Time + sn.Duration
 }
 

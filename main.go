@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image/color"
+	"log"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -35,42 +36,45 @@ func run() {
 	const sampleRate = 188200
 	e := ear.New(sampleRate, bufLen)
 
-	start := time.Now()
-	played := make([]playedNote, 0, 100)
-
-	song, err := notes.ReadSong("songs/range.txt")
-	for _, n := range song {
-		fmt.Printf("%#v\n", n)
+	song, err := notes.ReadSong("songs/morrowind.txt")
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	game := NewGame(song)
+
 	for !win.Closed() {
-		t := time.Since(start).Seconds()
-		note, nn := notes.GuessNote(e.Pitch)
-		if nn > 0 {
-			if len(played) == 0 || played[len(played)-1].end > 0 { // no note currently playing
-				played = append(played, playedNote{ // create new note
-					start: t,
-					line:  note.Bottom,
-				})
-			} else if played[len(played)-1].line != note.Bottom { // note changed
-				played[len(played)-1].end = t       // end current one
-				played = append(played, playedNote{ // create new note
-					start: t,
-					line:  note.Bottom,
-				})
-			}
-		} else { // no note
-			if len(played) > 0 && played[len(played)-1].end == 0 { // there is a note
-				played[len(played)-1].end = t // end it
-			}
+		// Input
+		if win.Pressed(pixelgl.KeyA) {
+			e.Pitch = 523.25
 		}
+		if win.Pressed(pixelgl.KeyS) {
+			e.Pitch = 587.33
+		}
+		if win.Pressed(pixelgl.KeyD) {
+			e.Pitch = 659.25
+		}
+		if win.Pressed(pixelgl.KeyF) {
+			e.Pitch = 698.0
+		}
+		note, _ := notes.GuessNote(e.Pitch)
 
+		// Processing
+		game.Update(note)
+
+		// Rendering
 		win.Clear(colornames.Antiquewhite)
-
 		soundVisualization(win, colornames.Blue, e.MicBuffer)
-		drawLines(win)
-		drawNotes(win, note.Bottom, note.Name, played, t)
-		drawSongNotes(win, song, t)
+		drawNoteLines(win)
+		drawNotes(win, game.Song, game.Played, game.Duration)
+
+		/* Draw note played
+		if name != "p" {
+			imd.Color = colornames.Black
+			imd.Push(pixel.V(WIDTH/2, ybase+float64(line)*noteRadius*2))
+			imd.Circle(noteRadius, 3)
+		}
+		*/
 		win.Update()
 
 		frames++
@@ -83,17 +87,105 @@ func run() {
 	}
 }
 
+type Game struct {
+	Song       []notes.SongNote
+	Played     []playedNote
+	Score      float64
+	Start      time.Time
+	Duration   float64 // in seconds
+	SongCursor int     // number of passsed notes in song
+}
+
 type playedNote struct {
-	start float64
-	end   float64
-	line  float64
+	notes.SongNote
+	Correct bool
+}
+
+func NewGame(song []notes.SongNote) *Game {
+	return &Game{
+		Played: make([]playedNote, 0, 100),
+		Song:   song,
+		Start:  time.Now(),
+	}
+}
+
+func (g *Game) currentNote() notes.Pitch {
+	for g.SongCursor < len(g.Song) && g.Song[g.SongCursor].End() < g.Duration { // skip played notes
+		g.SongCursor += 1
+	}
+	if g.SongCursor >= len(g.Song) {
+		return notes.Pause
+	}
+	if g.Song[g.SongCursor].Time < g.Duration { // already should be playing
+		return g.Song[g.SongCursor].Pitch
+	}
+	return notes.Pause
+}
+
+func (g *Game) Update(note notes.Pitch) {
+	oldDuration := g.Duration
+	g.Duration = time.Since(g.Start).Seconds()
+	playingCorrectly := note == g.currentNote()
+	if playingCorrectly {
+		g.Score += g.Duration - oldDuration
+		fmt.Println(g.Score)
+	}
+	if note.Name != "p" {
+		if len(g.Played) == 0 || g.Played[len(g.Played)-1].End() > 0 { // no note currently playing
+			fmt.Println("no note currently playing, creating new one")
+			g.Played = append(g.Played, playedNote{
+				SongNote: notes.SongNote{ // create new note
+					Time:     g.Duration,
+					Pitch:    note,
+					Duration: -1.0,
+				},
+				Correct: playingCorrectly,
+			})
+		} else if g.Played[len(g.Played)-1].Pitch != note || g.Played[len(g.Played)-1].Correct != playingCorrectly { // note changed
+			fmt.Println("note changed")
+			g.Played[len(g.Played)-1].Duration = g.Duration - g.Played[len(g.Played)-1].Time // end current one
+			g.Played = append(g.Played, playedNote{
+				SongNote: notes.SongNote{ // create new note
+					Time:     g.Duration,
+					Pitch:    note,
+					Duration: -1.0,
+				},
+				Correct: playingCorrectly,
+			})
+		}
+	} else { // no note
+		if len(g.Played) > 0 && g.Played[len(g.Played)-1].End() < 0 { // there is a note still playing
+			fmt.Println("there is a note still playing, stopping")
+			g.Played[len(g.Played)-1].Duration = g.Duration - g.Played[len(g.Played)-1].Time // end it
+		}
+	}
+
+	if len(g.Played) > 2 && g.Played[0].End() < g.Duration-timeLinePosition/noteSPS { // note not visible
+		g.Played = g.Played[1:] // remove
+	}
 }
 
 const noteRadius = 40
-const notePPS = 150 // pixels per second
+const noteSPS = 0.15 // screens per second
+const timeLinePosition = 0.3
 
 func time2X(width, time, currentTime float64) float64 {
-	return width/2 - (currentTime-time)*notePPS
+	return width * (timeLinePosition - (currentTime-time)*noteSPS)
+}
+
+func drawNotes(win *pixelgl.Window, song []notes.SongNote, played []playedNote, time float64) {
+	imd := imdraw.New(nil)
+	imd.EndShape = imdraw.SharpEndShape
+	width := win.Bounds().W()
+	ybase := float64(win.Bounds().H()/2 - noteRadius*4)
+
+	for _, note := range song {
+		drawNote(imd, time, width, ybase, false, note)
+	}
+	for _, note := range played {
+		drawNote(imd, time, width, ybase, note.Correct, note.SongNote)
+	}
+	imd.Draw(win)
 }
 
 var rainbow = []color.Color{
@@ -105,90 +197,70 @@ var rainbow = []color.Color{
 	colornames.Violet,
 }
 
-func drawSongNotes(win *pixelgl.Window, song []notes.SongNote, time float64) {
-	imd := imdraw.New(nil)
-	imd.EndShape = imdraw.SharpEndShape
-	imd.Color = colornames.Black
-	width := win.Bounds().W()
-	base := float64(win.Bounds().H()/2 - noteRadius*4)
-
-	for _, note := range song {
-		if note.Pitch.Name == "p" {
-			continue
-		}
-		if note.End() > 0 && time2X(width, note.End(), time) < 0 { // invisible already
-			continue
-		}
-		startX := time2X(width, note.Time, time)
-		endX := time2X(width, note.End(), time)
-		ycenter := base + note.Pitch.Bottom*noteRadius*2
-		if note.Pitch.HasAdditionalLine() {
-			imd.Push(
-				pixel.V(startX-noteRadius*2, ycenter),
-				pixel.V(endX+noteRadius*2, ycenter),
-			)
-			imd.Line(1)
-		}
-		imd.Push(
-			pixel.V(startX+1, ycenter-note.Pitch.Height*noteRadius+1),
-			pixel.V(endX-1, ycenter+note.Pitch.Height*noteRadius-1),
-		)
-		border := 2.0
-		if note.Pitch.Height < 0.5 { // black key
-			border = 0.0
-		}
-		imd.Rectangle(border)
+func drawNote(imd *imdraw.IMDraw, time, width, ybase float64, colorful bool, note notes.SongNote) {
+	if note.Pitch.Name == "p" {
+		return
 	}
-	imd.Draw(win)
+	end := note.End()
+	if end < 0.0 {
+		end = time
+	}
+	endX := time2X(width, end, time)
+	if endX < 0 { // invisible already
+		return
+	}
+	startX := time2X(width, note.Time, time)
+	if startX > width { // still invisible
+		return
+	}
+	ycenter := ybase + note.Pitch.Bottom*noteRadius*2
+
+	if note.Pitch.HasAdditionalLine() {
+		imd.Color = colornames.Black
+		imd.Push(
+			pixel.V(startX-noteRadius*2, ycenter),
+			pixel.V(endX+noteRadius*2, ycenter),
+		)
+		imd.Line(1)
+	}
+	border := 0.0
+	if colorful {
+		imd.Color = rainbow[(10+int(note.Pitch.Bottom*4))%len(rainbow)]
+	} else {
+		imd.Color = colornames.Black
+		if note.Pitch.Height >= 0.5 { // white key
+			border = 2.0
+		}
+	}
+
+	imd.Push(
+		pixel.V(startX+1, ycenter-note.Pitch.Height*noteRadius+1),
+		pixel.V(endX-1, ycenter+note.Pitch.Height*noteRadius-1),
+	)
+	imd.Rectangle(border)
 }
 
-func drawLines(win *pixelgl.Window) {
+func drawNoteLines(win *pixelgl.Window) {
 	imd := imdraw.New(nil)
 	imd.Color = colornames.Black
 
 	width := win.Bounds().W()
 	height := win.Bounds().H()
 
-	base := float64(height/2 - noteRadius*4)
+	ybase := float64(height/2 - noteRadius*4)
 	for i := 0; i < 5; i++ {
 		imd.Push(
-			pixel.V(0, base+float64(i)*noteRadius*2),
-			pixel.V(width, base+float64(i)*noteRadius*2),
+			pixel.V(0, ybase+float64(i)*noteRadius*2),
+			pixel.V(width, ybase+float64(i)*noteRadius*2),
 		)
 		imd.Line(1)
 	}
+	imd.Push(
+		pixel.V(width*timeLinePosition, 0),
+		pixel.V(width*timeLinePosition, height),
+	)
+	imd.Line(3)
 
-	imd.Draw(win)
-}
-
-func drawNotes(win *pixelgl.Window, line float64, name string, played []playedNote, time float64) {
-	imd := imdraw.New(nil)
-	imd.Color = colornames.Black
-	y := float64(win.Bounds().H()/2 - noteRadius*4)
-	width := win.Bounds().W()
-
-	for _, note := range played {
-		if note.end > 0 && time2X(width, note.end, time) < 0 { // invisible already
-			continue
-		}
-		end := note.end
-		if end == 0 {
-			end = time
-		}
-		imd.Color = rainbow[(10+int(note.line*4))%len(rainbow)]
-		imd.Push(
-			pixel.V(time2X(width, note.start, time), y+(float64(note.line)-0.25)*noteRadius*2),
-			pixel.V(time2X(width, end, time), y+(float64(note.line)+0.25)*noteRadius*2),
-		)
-		imd.Rectangle(0)
-	}
-	/* Draw note played
-	if name != "p" {
-		imd.Color = colornames.Black
-		imd.Push(pixel.V(WIDTH/2, y+float64(line)*noteRadius*2))
-		imd.Circle(noteRadius, 3)
-	}
-	*/
 	imd.Draw(win)
 }
 
