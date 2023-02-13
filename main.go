@@ -128,7 +128,7 @@ func (g *Game) Update(note notes.Pitch) {
 	playingCorrectly := note == g.currentNote()
 	if playingCorrectly {
 		g.Score += g.Duration - oldDuration
-		fmt.Println(g.Score)
+		// fmt.Println(g.Score)
 	}
 	if note.Name != "p" {
 		if len(g.Played) == 0 || g.Played[len(g.Played)-1].End() > 0 { // no note currently playing
@@ -227,10 +227,16 @@ func drawNote(imd *imdraw.IMDraw, time, width, ybase float64, colorful bool, not
 	if colorful {
 		imd.Color = rainbow[(10+int(note.Pitch.Bottom*4))%len(rainbow)]
 	} else {
-		imd.Color = colornames.Black
 		if note.Pitch.Height >= 0.5 { // white key
+			imd.Color = colornames.White
+			imd.Push(
+				pixel.V(startX+1, ycenter-note.Pitch.Height*noteRadius+1),
+				pixel.V(endX-1, ycenter+note.Pitch.Height*noteRadius-1),
+			)
+			imd.Rectangle(0)
 			border = 2.0
 		}
+		imd.Color = colornames.Black
 	}
 
 	imd.Push(

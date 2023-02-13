@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
+	"strconv"
 )
 
 type Pitch struct {
@@ -99,14 +101,28 @@ func (sn SongNote) End() float64 {
 	return sn.Time + sn.Duration
 }
 
-func NoteFromString(s string) (SongNote, error) {
-	p := pitchByName[s] // TODO: parse durations
+var noteRe = regexp.MustCompile(`([a-z']+)(\d+)?(.?)`)
+
+func NoteFromMatch(parts []string, defaultDuration, fullDuration float64) (SongNote, error) {
+	p := pitchByName[parts[1]]
+	note := SongNote{}
 	if p.Name == "" {
-		return SongNote{}, fmt.Errorf("Unknown note: %#v", s)
+		return note, fmt.Errorf("Unknown note: %#v", parts[1])
+	}
+	duration := defaultDuration
+	if parts[2] != "" {
+		nd, err := strconv.Atoi(parts[2])
+		if err != nil {
+			return note, fmt.Errorf("Failed to parse duration %s: %w", parts[2], err)
+		}
+		duration = fullDuration / float64(nd)
+	}
+	if parts[3] == "." {
+		duration *= 1.5
 	}
 	return SongNote{
 		Pitch:    p,
-		Duration: 1.0,
+		Duration: duration,
 	}, nil
 }
 
@@ -116,23 +132,21 @@ func ReadSong(filename string) (song []SongNote, err error) {
 		return nil, err
 	}
 	defer f.Close()
-	var token string
+	data, err := io.ReadAll(f)
+	matches := noteRe.FindAllStringSubmatch(string(data), -1)
+
 	time := 0.0
-	for {
-		_, err := fmt.Fscanf(f, "%s", &token)
-		if err != nil {
-			if err == io.EOF {
-				return song, nil
-			}
-			return nil, err
-		}
-		n, err := NoteFromString(token)
+	fullDuration := 4.0
+	defaultDuration := fullDuration / 4
+	for _, match := range matches {
+		n, err := NoteFromMatch(match, defaultDuration, fullDuration)
 		if err != nil {
 			return nil, err
 		}
 		n.Time = time
 		time += n.Duration
+		defaultDuration = n.Duration
 		song = append(song, n)
 	}
-	return nil, nil
+	return song, nil
 }
