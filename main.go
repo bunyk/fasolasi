@@ -135,10 +135,12 @@ func (g *Game) Update(note notes.Pitch) {
 	oldDuration := g.Duration
 	g.Duration = time.Since(g.Start).Seconds()
 	playingCorrectly := note == g.currentNote()
-	if playingCorrectly {
-		g.Score += g.Duration - oldDuration
-	}
 	if note.Name != "p" {
+		if playingCorrectly {
+			g.Score += g.Duration - oldDuration
+		} else {
+			g.Score -= g.Duration - oldDuration
+		}
 		if len(g.Played) == 0 || g.Played[len(g.Played)-1].End() > 0 { // no note currently playing
 			g.Played = append(g.Played, playedNote{
 				SongNote: notes.SongNote{ // create new note
