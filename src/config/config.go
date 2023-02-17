@@ -21,10 +21,13 @@ var GameMode string
 
 func init() {
 	flag.StringVar(&SongFilename, "song", "required", "path to file of the song")
-	flag.StringVar(&SongFilename, "mode", "training", "mode of game training or challenge")
+	flag.StringVar(&GameMode, "mode", "training", "mode of game training or challenge")
 
 	flag.Parse()
 	if SongFilename == "required" {
 		log.Fatal("-song is required")
+	}
+	if !(GameMode == "training" || GameMode == "challenge") {
+		log.Fatal("mode could be only training or challenge")
 	}
 }
