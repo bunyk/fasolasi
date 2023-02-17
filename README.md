@@ -5,7 +5,6 @@ Microphone-controlled musical game for recorder, similar to Frets on Fire or Syn
 ## TODO
 - Progress bar
 - Stop when song ends
-- Better font: https://github.com/faiface/pixel-examples/blob/master/community/sudoku/sudoku.go#L85
 - More songs 
 - Leaderboard
 - Menu

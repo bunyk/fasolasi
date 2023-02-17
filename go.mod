@@ -6,6 +6,7 @@ require (
 	github.com/MarkKremer/microphone v1.1.0
 	github.com/faiface/beep v1.1.0
 	github.com/faiface/pixel v0.10.0
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/stretchr/testify v1.3.0
 	github.com/unixpickle/wav v0.0.0-20190525173943-42cf4c455f64
 	golang.org/x/image v0.3.0

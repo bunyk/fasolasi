@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"image/color"
+	"log"
 
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/notes"
@@ -10,8 +11,9 @@ import (
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
+	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/colornames"
-	"golang.org/x/image/font/basicfont"
+	"golang.org/x/image/font/gofont/goregular"
 )
 
 func time2X(width, time, currentTime float64) float64 {
@@ -115,12 +117,23 @@ func renderNoteLines(win *pixelgl.Window) {
 	imd.Draw(win)
 }
 
-var fontAtlas = text.NewAtlas(basicfont.Face7x13, text.ASCII) // TODO: select better font
-var scoreTxt = text.New(pixel.ZV, fontAtlas)
-
 func renderScore(win *pixelgl.Window, score int) {
 	scoreTxt.Color = colornames.Black
 	scoreTxt.Clear()
 	fmt.Fprintf(scoreTxt, "%d", score)
-	scoreTxt.Draw(win, pixel.IM.Scaled(pixel.ZV, 4).Moved(pixel.V(0, win.Bounds().H()-40)))
+	scoreTxt.Draw(win, pixel.IM.Moved(pixel.V(0, win.Bounds().H()-40)))
+}
+
+var scoreTxt *text.Text
+
+func init() {
+	ttf, err := truetype.Parse(goregular.TTF)
+	if err != nil {
+		log.Fatal(err)
+	}
+	face := truetype.NewFace(ttf, &truetype.Options{
+		Size: 30,
+	})
+	atlas := text.NewAtlas(face, text.ASCII)
+	scoreTxt = text.New(pixel.ZV, atlas)
 }
