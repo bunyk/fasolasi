@@ -135,8 +135,9 @@ func ReadSong(filename string) (song []SongNote, err error) {
 	data, err := io.ReadAll(f)
 	matches := noteRe.FindAllStringSubmatch(string(data), -1)
 
-	time := 0.0
-	fullDuration := 4.0
+	time := 3.0 // give some initial time to prepare for first note
+	fullDuration := 3.0
+	breathe := 0.1
 	defaultDuration := fullDuration / 4
 	for _, match := range matches {
 		n, err := NoteFromMatch(match, defaultDuration, fullDuration)
@@ -144,7 +145,7 @@ func ReadSong(filename string) (song []SongNote, err error) {
 			return nil, err
 		}
 		n.Time = time
-		time += n.Duration
+		time += n.Duration + breathe
 		defaultDuration = n.Duration
 		song = append(song, n)
 	}
