@@ -6,6 +6,8 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+
+	"github.com/bunyk/fasolasi/src/config"
 )
 
 type Pitch struct {
@@ -103,7 +105,7 @@ func (sn SongNote) End() float64 {
 
 var noteRe = regexp.MustCompile(`([a-z']+)(\d+)?(.?)`)
 
-func NoteFromMatch(parts []string, defaultDuration, fullDuration float64) (SongNote, error) {
+func noteFromMatch(parts []string, defaultDuration, fullDuration float64) (SongNote, error) {
 	p := pitchByName[parts[1]]
 	note := SongNote{}
 	if p.Name == "" {
@@ -126,6 +128,8 @@ func NoteFromMatch(parts []string, defaultDuration, fullDuration float64) (SongN
 	}, nil
 }
 
+// TODO: configure BPM
+// In song file or as parameter?
 func ReadSong(filename string) (song []SongNote, err error) {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -135,17 +139,16 @@ func ReadSong(filename string) (song []SongNote, err error) {
 	data, err := io.ReadAll(f)
 	matches := noteRe.FindAllStringSubmatch(string(data), -1)
 
-	time := 3.0 // give some initial time to prepare for first note
-	fullDuration := 3.0
-	breathe := 0.1
+	time := config.TimeBeforeFirstNote // give some initial time to prepare for first note
+	fullDuration := 1.0
 	defaultDuration := fullDuration / 4
 	for _, match := range matches {
-		n, err := NoteFromMatch(match, defaultDuration, fullDuration)
+		n, err := noteFromMatch(match, defaultDuration, fullDuration)
 		if err != nil {
 			return nil, err
 		}
 		n.Time = time
-		time += n.Duration + breathe
+		time += n.Duration + config.BreathInterval
 		defaultDuration = n.Duration
 		song = append(song, n)
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/notes"
 	"github.com/faiface/pixel/pixelgl"
+	"golang.org/x/exp/constraints"
 )
 
 type Session struct {
@@ -13,7 +14,7 @@ type Session struct {
 	Played     []playedNote
 	Score      float64
 	Start      time.Time
-	Duration   float64 // in seconds
+	Duration   float64 // session duration, progress of song in seconds
 	SongCursor int     // number of passsed notes in song
 	updateMode func(dt float64, note notes.Pitch)
 }
@@ -37,18 +38,37 @@ func NewSession(song []notes.SongNote, mode string) *Session {
 	return s
 }
 
-func (s *Session) currentNote() notes.Pitch {
+func (s Session) Finished() bool {
+	return s.SongCursor >= len(s.Song)
+}
+
+func (s *Session) moveSongCursor() {
 	// skip played notes
-	for s.SongCursor < len(s.Song) && s.Song[s.SongCursor].End() < s.Duration {
+	for !s.Finished() && s.Song[s.SongCursor].End() < s.Duration {
 		s.SongCursor += 1
 	}
+}
+
+func (s *Session) nextNote() notes.SongNote {
+	s.moveSongCursor()
+	if s.Finished() {
+		return notes.SongNote{}
+	}
+	return s.Song[s.SongCursor]
+}
+
+func (s *Session) currentNote() notes.Pitch {
+	s.moveSongCursor()
+
 	// no notes to play left
-	if s.SongCursor >= len(s.Song) {
+	if s.Finished() {
 		return notes.Pause
 	}
-	// already should be playing some note
-	if s.Song[s.SongCursor].Time < s.Duration {
-		return s.Song[s.SongCursor].Pitch
+	nn := s.Song[s.SongCursor]
+
+	// should be playing some note right now
+	if nn.Time < s.Duration {
+		return nn.Pitch
 	}
 	// otherwise - not yet playing anything
 	return notes.Pause
@@ -99,43 +119,44 @@ func (s *Session) challengeUpdate(dt float64, note notes.Pitch) {
 	}
 }
 
-// Notes move only while you play correct note, to progress - play all the notes
+// Notes move only while you play correct note, to progress - play all the notes in correct orders.
+// Obeying durations is optional.
 func (s *Session) trainingUpdate(dt float64, note notes.Pitch) {
-	playingCorrectly := note == s.currentNote()
-	if !playingCorrectly {
+	if s.Finished() {
+		s.Duration += dt
+		s.Played = nil
 		return
 	}
-	s.Duration += dt
+	nn := s.nextNote()
 	if note.Name != "p" {
-		if len(s.Played) == 0 || s.Played[len(s.Played)-1].End() > 0 { // no note currently playing
-			s.Played = append(s.Played, playedNote{
-				SongNote: notes.SongNote{ // create new note
-					Time:     s.Duration,
-					Pitch:    note,
-					Duration: -1.0,
-				},
-				Correct: true,
-			})
-		} else if s.Played[len(s.Played)-1].Pitch != note { // note changed
-			s.Played[len(s.Played)-1].Duration = s.Duration - s.Played[len(s.Played)-1].Time // end current one
-			s.Played = append(s.Played, playedNote{
-				SongNote: notes.SongNote{ // create new note
-					Time:     s.Duration,
-					Pitch:    note,
-					Duration: -1.0,
-				},
-				Correct: true,
-			})
+		if len(s.Played) > 0 { // we were already playing some note
+			if s.Played[0].Pitch == note { // still playing it
+				s.Duration = min(s.Duration+dt, s.Played[0].End()) // move time, while note not ends
+				return                                             // and that's it for continuing playing note
+			}
 		}
-	} else { // no note
-		if len(s.Played) > 0 && s.Played[len(s.Played)-1].End() < 0 { // there is a note still playing
-			s.Played[len(s.Played)-1].Duration = s.Duration - s.Played[len(s.Played)-1].Time // end it
+		if note.Name == nn.Pitch.Name { // start playing current note
+			s.Played = []playedNote{{
+				SongNote: nn,
+				Correct:  true,
+			}}
+			s.Duration = nn.Time
+			s.SongCursor += 1 // Prepare for next note
+		}
+	} else { // no note, probably stopped playing
+		s.Played = nil
+		s.Duration = nn.Time // Move timeline to next note
+		if nn.Pitch.Name == "p" {
+			s.SongCursor += 1
 		}
 	}
+}
 
-	if len(s.Played) > 2 && s.Played[0].End() < s.Duration-config.TimeLinePosition/config.NoteSPS { // note not visible
-		s.Played = s.Played[1:] // remove
+func min[T constraints.Ordered](a, b T) T {
+	if a < b {
+		return a
 	}
+	return b
 }
 
 func (s Session) Render(win *pixelgl.Window) {
