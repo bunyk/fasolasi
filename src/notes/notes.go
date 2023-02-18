@@ -140,7 +140,7 @@ func ReadSong(filename string) (song []SongNote, err error) {
 	matches := noteRe.FindAllStringSubmatch(string(data), -1)
 
 	time := config.TimeBeforeFirstNote // give some initial time to prepare for first note
-	fullDuration := 1.0
+	fullDuration := 3.0
 	defaultDuration := fullDuration / 4
 	for _, match := range matches {
 		n, err := noteFromMatch(match, defaultDuration, fullDuration)

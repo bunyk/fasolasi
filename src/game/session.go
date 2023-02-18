@@ -131,8 +131,15 @@ func (s *Session) trainingUpdate(dt float64, note notes.Pitch) {
 	if note.Name != "p" {
 		if len(s.Played) > 0 { // we were already playing some note
 			if s.Played[0].Pitch == note { // still playing it
-				s.Duration = min(s.Duration+dt, s.Played[0].End()) // move time, while note not ends
-				return                                             // and that's it for continuing playing note
+				s.Duration += dt
+				if s.Duration > s.Played[0].End() { // Should have stopped already
+					s.Score -= s.Duration - s.Played[0].End() // Decrease score
+					s.Duration = s.Played[0].End()
+					s.Played[0].Correct = false
+				} else {
+					s.Score += dt
+				}
+				return // and that's it for continuing playing note
 			}
 		}
 		if note.Name == nn.Pitch.Name { // start playing current note
@@ -140,6 +147,7 @@ func (s *Session) trainingUpdate(dt float64, note notes.Pitch) {
 				SongNote: nn,
 				Correct:  true,
 			}}
+			s.Score += 1.0
 			s.Duration = nn.Time
 			s.SongCursor += 1 // Prepare for next note
 		}
@@ -147,6 +155,7 @@ func (s *Session) trainingUpdate(dt float64, note notes.Pitch) {
 		s.Played = nil
 		s.Duration = nn.Time // Move timeline to next note
 		if nn.Pitch.Name == "p" {
+			s.Score += 1.0
 			s.SongCursor += 1
 		}
 	}

@@ -5,6 +5,7 @@ Microphone-controlled musical game for recorder, similar to Frets on Fire or Syn
 ## TODO
 - Better name ideas? 
 - Progress bar
+- Play any note to start
 - Stop when song ends
 - More songs 
 - Leaderboard

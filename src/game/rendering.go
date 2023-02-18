@@ -109,8 +109,8 @@ func renderNoteLines(win *pixelgl.Window) {
 		imd.Line(1)
 	}
 	imd.Push(
-		pixel.V(width*config.TimeLinePosition, 0),
-		pixel.V(width*config.TimeLinePosition, height),
+		pixel.V(width*config.TimeLinePositionLatency, 0),
+		pixel.V(width*config.TimeLinePositionLatency, height),
 	)
 	imd.Line(3)
 
