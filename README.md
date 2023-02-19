@@ -1,20 +1,57 @@
-# fasolasi
-Microphone-controlled musical game for recorder, similar to Frets on Fire or Synthesia
+# FaSoLaSi
+FaSoLaSi is a free and open source musical game for recorder (flute) that allows players to use their in strumet as a controller for the game. Written in Go, using Pixel graphis library and YIN algorithm for pitch detection.
+
+## Gameplay
+Gameplay is inspired by Guitar Hero, Frets on Fire, Synthesia and similar games. You have notes running at you, and you need to start and end playing them in the right moment. The faster you react - the better score you have. There is an additional training mode, where notes wait until you play them.
+
+[![Video of a gameplay](https://img.youtube.com/vi/oOcbo2rJ_a8/0.jpg)](https://youtu.be/oOcbo2rJ_a8?t=159)
+
+## Editing songs
+Songs currently are written in plain text files using [LilyPond-like](http://lilypond.org/doc/v2.18/Documentation/notation/writing-pitches) simplified notation. Example:
+
+```
+g4. a8 g4 e2.
+g4. a8 g4 e2.
+d'2 d'4 b2.
+```
+
+Notes are separated by whitespace, pitch is marked by letter, from c to b. `'` character means to go one octave up. Lowest note is `c`, highest - `c''`. Duration is defined by number, 2 means half note, 4 means quarter, etc. Dot means to extend note by half of it's duration. If duration is not given - it defaults to 1/4 or duration of previous note.
 
 
 ## TODO
-- Better name ideas? 
+There is no official roadmap, I just have some random ideas:
+
+- Better project name?
 - Progress bar
-- Play any note to start
+- Fingering diagram
+- "Play any note to start", to not give fixed time to get instrument and fingers into position.
 - Stop when song ends
 - More songs 
 - Leaderboard
-- Menu
+- Game menu instead of CLI flags
 - Training mode,
 	- Score should be proportional to extra time you spend on the song.
 	- Show diagram of holes that need to be covered?
 
 - Animations:
-	- Thumb ups or thums down fly from note you play to the score.
+	- Thumb ups or thums down fly from note you play to the score, or something like that.
+	- Vibrate the note currently played? 
 
+- Recording mode. Make game listen to some music and just try to write down notes played, to create song file without text editing.
+
+- Create binary releases for the users without Go
 - Copy some ideas from https://github.com/fofix/fofix
+
+Also there are no deadlines, I have full-time job and a kid, so help me here. :)
+
+## Contributing
+FaSoLaSi is an open source project, and any contributions are welcome. If you like the game you could:
+
+- Tell your friends!
+- Install it on your machine and write required steps for the installation section. I already forgot which audio libraries were necessary. :)
+- Share notes to your favourite recorder song(s).
+- Suggest improvements and new features. 
+- Find and report a bug.
+- Review the code and send a PRs with questions for unclear sections. I'll try to add explanations in comments.
+- Recommend me a book or online-course on music theory and/or recorder, I'm complete noob in music (as you could see from demo video).
+

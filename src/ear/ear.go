@@ -27,7 +27,9 @@ func (e *Ear) listen() {
 }
 
 func New(sampleRate, bufSize int) *Ear {
-	microphone.Init() // without this you will get "PortAudio not initialized" error later
+	if err := microphone.Init(); err != nil { // without this you will get "PortAudio not initialized" error later
+		log.Fatal(err)
+	}
 
 	// Create microphone stream
 	micStream, _, err := microphone.OpenDefaultStream(beep.SampleRate(sampleRate), 1)
@@ -39,7 +41,9 @@ func New(sampleRate, bufSize int) *Ear {
 		micStream:     micStream,
 		pitchDetector: yin.NewYin(float64(sampleRate), bufSize, 0.05),
 	}
-	micStream.Start() // Start recording
+	if ear := micStream.Start(); ear != nil { // Start recording
+		log.Fatal(err)
+	}
 	e.listen()
 	return e
 }

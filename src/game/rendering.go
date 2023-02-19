@@ -124,6 +124,23 @@ func renderScore(win *pixelgl.Window, score int) {
 	scoreTxt.Draw(win, pixel.IM.Moved(pixel.V(0, win.Bounds().H()-40)))
 }
 
+func hightLightNote(win *pixelgl.Window, color color.Color, note notes.Pitch) {
+	imd := imdraw.New(nil)
+	width := win.Bounds().W()
+	ybase := float64(win.Bounds().H()/2 - config.NoteRadius*4)
+	if note.Name == "p" {
+		return
+	}
+	ycenter := ybase + note.Bottom*config.NoteRadius*2
+	imd.Color = color
+	imd.Push(
+		pixel.V(0, ycenter-note.Height*config.NoteRadius+1),
+		pixel.V(width, ycenter+note.Height*config.NoteRadius-1),
+	)
+	imd.Rectangle(0)
+	imd.Draw(win)
+}
+
 var scoreTxt *text.Text
 
 func init() {

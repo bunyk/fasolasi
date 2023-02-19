@@ -6,17 +6,18 @@ import (
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/notes"
 	"github.com/faiface/pixel/pixelgl"
-	"golang.org/x/exp/constraints"
+	"golang.org/x/image/colornames"
 )
 
 type Session struct {
-	Song       []notes.SongNote
-	Played     []playedNote
-	Score      float64
-	Start      time.Time
-	Duration   float64 // session duration, progress of song in seconds
-	SongCursor int     // number of passsed notes in song
-	updateMode func(dt float64, note notes.Pitch)
+	Song             []notes.SongNote
+	Played           []playedNote
+	currentlyPlaying notes.Pitch
+	Score            float64
+	Start            time.Time
+	Duration         float64 // session duration, progress of song in seconds
+	SongCursor       int     // number of passsed notes in song
+	updateMode       func(dt float64, note notes.Pitch)
 }
 
 type playedNote struct {
@@ -75,6 +76,7 @@ func (s *Session) currentNote() notes.Pitch {
 }
 
 func (s *Session) Update(dt float64, note notes.Pitch) {
+	s.currentlyPlaying = note
 	s.updateMode(dt, note)
 }
 
@@ -161,14 +163,8 @@ func (s *Session) trainingUpdate(dt float64, note notes.Pitch) {
 	}
 }
 
-func min[T constraints.Ordered](a, b T) T {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func (s Session) Render(win *pixelgl.Window) {
+	hightLightNote(win, colornames.Salmon, s.currentlyPlaying)
 	renderNoteLines(win)
 	renderNotes(win, s.Song, s.Played, s.Duration)
 	renderScore(win, int(s.Score*100))
