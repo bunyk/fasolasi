@@ -23,15 +23,13 @@ There is no official roadmap, I just have some random ideas:
 
 - Better project name?
 - Progress bar
-- Fingering diagram
+- Fingering diagram (and option to turn it off)
 - "Play any note to start", to not give fixed time to get instrument and fingers into position.
 - Stop when song ends
 - More songs 
 - Leaderboard
-- Game menu instead of CLI flags
 - Training mode,
 	- Score should be proportional to extra time you spend on the song.
-	- Show diagram of holes that need to be covered?
 
 - Animations:
 	- Thumb ups or thums down fly from note you play to the score, or something like that.
@@ -54,4 +52,3 @@ FaSoLaSi is an open source project, and any contributions are welcome. If you li
 - Find and report a bug.
 - Review the code and send a PRs with questions for unclear sections. I'll try to add explanations in comments.
 - Recommend me a book or online-course on music theory and/or recorder, I'm complete noob in music (as you could see from demo video).
-

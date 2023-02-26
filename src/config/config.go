@@ -1,9 +1,6 @@
 package config
 
 import (
-	"flag"
-	"log"
-
 	"golang.org/x/image/colornames"
 )
 
@@ -39,20 +36,3 @@ var MenuButtonHeight = 60.0
 var MenuVerticalSpacing = 30.0
 var MenuButtonMaxChars = 30
 var MenuMaxItems = 7
-
-// CLI arguments, also part of config in some kind
-var SongFilename string
-var GameMode string
-
-func init() {
-	flag.StringVar(&SongFilename, "song", "required", "path to file of the song")
-	flag.StringVar(&GameMode, "mode", "training", "mode of game training or challenge")
-
-	flag.Parse()
-	if SongFilename == "required" {
-		log.Fatal("-song is required")
-	}
-	if !(GameMode == "training" || GameMode == "challenge") {
-		log.Fatal("mode could be only training or challenge")
-	}
-}

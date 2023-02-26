@@ -31,7 +31,7 @@ type playedNote struct {
 	Correct bool
 }
 
-func NewSession(filename string) common.Scene {
+func NewSession(filename, mode string) common.Scene {
 	fmt.Println("Initializing game session for", filename)
 	song, err := notes.ReadSong(config.SongsFolder + "/" + filename)
 	if err != nil {
@@ -42,7 +42,7 @@ func NewSession(filename string) common.Scene {
 		Song:   song,
 		ear:    ear.New(config.MicrophoneSampleRate, config.MicrophoneBufferLength),
 	}
-	if config.GameMode == "challenge" {
+	if mode == "challenge" {
 		s.updateMode = s.challengeUpdate
 	} else {
 		s.updateMode = s.trainingUpdate

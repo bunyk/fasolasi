@@ -9,7 +9,6 @@ import (
 	"github.com/aquilax/truncate"
 	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
-	"github.com/bunyk/fasolasi/src/game"
 	"github.com/faiface/pixel/pixelgl"
 )
 
@@ -74,7 +73,7 @@ func (sm *SongMenu) Loop(win *pixelgl.Window) common.Scene {
 
 	for _, song := range sm.Songs[sm.Offset : sm.Offset+limit] {
 		if button(win, fl(haveButtons), cleanupName(song)) {
-			return game.NewSession(song)
+			return &ModeMenu{song}
 		}
 		haveButtons++
 	}
