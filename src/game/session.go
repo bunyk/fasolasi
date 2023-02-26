@@ -4,7 +4,9 @@ import (
 	"time"
 
 	"github.com/bunyk/fasolasi/src/config"
+	"github.com/bunyk/fasolasi/src/ear"
 	"github.com/bunyk/fasolasi/src/notes"
+	"github.com/bunyk/fasolasi/src/ui"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
 )
@@ -14,10 +16,12 @@ type Session struct {
 	Played           []playedNote
 	currentlyPlaying notes.Pitch
 	Score            float64
-	Start            time.Time
-	Duration         float64 // session duration, progress of song in seconds
-	SongCursor       int     // number of passsed notes in song
+	Start            time.Time // time of start of the session
+	Duration         float64   // session duration, progress of song in seconds
+	SongCursor       int       // number of passsed notes in song
+	Last             time.Time // time of last update
 	updateMode       func(dt float64, note notes.Pitch)
+	ear              *ear.Ear // For audio input
 }
 
 type playedNote struct {
@@ -25,17 +29,19 @@ type playedNote struct {
 	Correct bool
 }
 
-func NewSession(song []notes.SongNote, mode string) *Session {
+func NewSession(song []notes.SongNote, mode string) ui.Scene {
 	s := &Session{
 		Played: make([]playedNote, 0, 100),
 		Song:   song,
-		Start:  time.Now(),
+		ear:    ear.New(config.MicrophoneSampleRate, config.MicrophoneBufferLength),
 	}
 	if mode == "challenge" {
 		s.updateMode = s.challengeUpdate
 	} else {
 		s.updateMode = s.trainingUpdate
 	}
+	s.Start = time.Now()
+	s.Last = time.Now()
 	return s
 }
 
@@ -75,9 +81,7 @@ func (s *Session) currentNote() notes.Pitch {
 	return notes.Pause
 }
 
-func (s *Session) Update(dt float64, note notes.Pitch) {
-	s.currentlyPlaying = note
-	s.updateMode(dt, note)
+func (s *Session) update(note notes.Pitch) {
 }
 
 // Notes don't stop, and you need to hit correct ones in time
@@ -163,9 +167,43 @@ func (s *Session) trainingUpdate(dt float64, note notes.Pitch) {
 	}
 }
 
-func (s Session) Render(win *pixelgl.Window) {
+func (s *Session) Loop(win *pixelgl.Window) ui.Scene {
+	dt := time.Since(s.Last).Seconds()
+	s.Last = time.Now()
+
+	// Input
+	kp := KeyboardPitch(win) // for silent debugging :)
+	if kp > 0.0 {
+		s.ear.Pitch = kp
+	}
+	note, _ := notes.GuessNote(s.ear.Pitch)
+
+	// Processing
+	s.currentlyPlaying = note
+	s.updateMode(dt, note)
+
+	// Rendering
+	win.Clear(colornames.Antiquewhite)
+	soundVisualization(win, colornames.Blue, s.ear.MicBuffer)
 	hightLightNote(win, colornames.Salmon, s.currentlyPlaying)
 	renderNoteLines(win)
 	renderNotes(win, s.Song, s.Played, s.Duration)
 	renderScore(win, int(s.Score*100))
+	return s
+}
+
+func KeyboardPitch(win *pixelgl.Window) float64 {
+	if win.Pressed(pixelgl.KeyA) {
+		return 523.25
+	}
+	if win.Pressed(pixelgl.KeyS) {
+		return 587.33
+	}
+	if win.Pressed(pixelgl.KeyD) {
+		return 659.25
+	}
+	if win.Pressed(pixelgl.KeyF) {
+		return 698.0
+	}
+	return -1.0
 }
