@@ -1,4 +1,4 @@
-package ui
+package common
 
 import "github.com/faiface/pixel/pixelgl"
 

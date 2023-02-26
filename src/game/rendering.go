@@ -3,17 +3,15 @@ package game
 import (
 	"fmt"
 	"image/color"
-	"log"
 
+	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/notes"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/faiface/pixel/text"
-	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/colornames"
-	"golang.org/x/image/font/gofont/goregular"
 )
 
 func time2X(width, time, currentTime float64) float64 {
@@ -118,6 +116,7 @@ func renderNoteLines(win *pixelgl.Window) {
 }
 
 func renderScore(win *pixelgl.Window, score int) {
+	scoreTxt := text.New(pixel.ZV, common.TextAtlas)
 	scoreTxt.Color = colornames.Black
 	scoreTxt.Clear()
 	fmt.Fprintf(scoreTxt, "%d", score)
@@ -139,20 +138,6 @@ func hightLightNote(win *pixelgl.Window, color color.Color, note notes.Pitch) {
 	)
 	imd.Rectangle(0)
 	imd.Draw(win)
-}
-
-var scoreTxt *text.Text
-
-func init() {
-	ttf, err := truetype.Parse(goregular.TTF)
-	if err != nil {
-		log.Fatal(err)
-	}
-	face := truetype.NewFace(ttf, &truetype.Options{
-		Size: 30,
-	})
-	atlas := text.NewAtlas(face, text.ASCII)
-	scoreTxt = text.New(pixel.ZV, atlas)
 }
 
 func soundVisualization(win *pixelgl.Window, col color.Color, data [][2]float64) {

@@ -1,12 +1,14 @@
 package game
 
 import (
+	"fmt"
+	"log"
 	"time"
 
+	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/ear"
 	"github.com/bunyk/fasolasi/src/notes"
-	"github.com/bunyk/fasolasi/src/ui"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
 )
@@ -29,17 +31,23 @@ type playedNote struct {
 	Correct bool
 }
 
-func NewSession(song []notes.SongNote, mode string) ui.Scene {
+func NewSession(filename string) common.Scene {
+	fmt.Println("Initializing game session for", filename)
+	song, err := notes.ReadSong(config.SongsFolder + "/" + filename)
+	if err != nil {
+		log.Fatal(err)
+	}
 	s := &Session{
 		Played: make([]playedNote, 0, 100),
 		Song:   song,
 		ear:    ear.New(config.MicrophoneSampleRate, config.MicrophoneBufferLength),
 	}
-	if mode == "challenge" {
+	if config.GameMode == "challenge" {
 		s.updateMode = s.challengeUpdate
 	} else {
 		s.updateMode = s.trainingUpdate
 	}
+	fmt.Println("Go!")
 	s.Start = time.Now()
 	s.Last = time.Now()
 	return s
@@ -167,7 +175,7 @@ func (s *Session) trainingUpdate(dt float64, note notes.Pitch) {
 	}
 }
 
-func (s *Session) Loop(win *pixelgl.Window) ui.Scene {
+func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 	dt := time.Since(s.Last).Seconds()
 	s.Last = time.Now()
 
@@ -183,7 +191,7 @@ func (s *Session) Loop(win *pixelgl.Window) ui.Scene {
 	s.updateMode(dt, note)
 
 	// Rendering
-	win.Clear(colornames.Antiquewhite)
+	win.Clear(config.BackgroundColor)
 	soundVisualization(win, colornames.Blue, s.ear.MicBuffer)
 	hightLightNote(win, colornames.Salmon, s.currentlyPlaying)
 	renderNoteLines(win)
