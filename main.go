@@ -9,7 +9,7 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 
 	"github.com/bunyk/fasolasi/src/common"
-	"github.com/bunyk/fasolasi/src/game"
+	"github.com/bunyk/fasolasi/src/ui"
 )
 
 func run() {
@@ -29,8 +29,8 @@ func run() {
 	second := time.Tick(time.Second * 5)
 
 	var currentScene common.Scene
-	// currentScene = &ui.MainMenu{}
-	currentScene = game.NewSession("Morrowind.txt", "challenge")
+	currentScene = &ui.MainMenu{}
+	// currentScene = game.NewSession("Morrowind.txt", "challenge")
 
 	for !win.Closed() {
 		currentScene = currentScene.Loop(win)
