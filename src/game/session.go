@@ -20,8 +20,9 @@ type Session struct {
 	Score            float64
 	Start            time.Time // time of start of the session
 	Duration         float64   // session duration, progress of song in seconds
+	SongDuration     float64   // Duration of the song in seconds
 	SongCursor       int       // number of passsed notes in song
-	Last             time.Time // time of last update
+	LastUpdateTime   time.Time // time of last update
 	updateMode       func(dt float64, note notes.Pitch)
 	ear              *ear.Ear // For audio input
 }
@@ -47,9 +48,11 @@ func NewSession(filename, mode string) common.Scene {
 	} else {
 		s.updateMode = s.trainingUpdate
 	}
+	s.SongDuration = song[len(song)-1].End()
+
 	fmt.Println("Go!")
 	s.Start = time.Now()
-	s.Last = time.Now()
+	s.LastUpdateTime = time.Now()
 	return s
 }
 
@@ -176,8 +179,8 @@ func (s *Session) trainingUpdate(dt float64, note notes.Pitch) {
 }
 
 func (s *Session) Loop(win *pixelgl.Window) common.Scene {
-	dt := time.Since(s.Last).Seconds()
-	s.Last = time.Now()
+	dt := time.Since(s.LastUpdateTime).Seconds()
+	s.LastUpdateTime = time.Now()
 
 	// Input
 	kp := KeyboardPitch(win) // for silent debugging :)
@@ -196,6 +199,7 @@ func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 	hightLightNote(win, colornames.Salmon, s.currentlyPlaying)
 	renderNoteLines(win)
 	renderNotes(win, s.Song, s.Played, s.Duration)
+	renderProgress(win, s.Duration/s.SongDuration)
 	renderScore(win, int(s.Score*100))
 	return s
 }

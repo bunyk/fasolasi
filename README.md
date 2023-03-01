@@ -22,7 +22,6 @@ Notes are separated by whitespace, pitch is marked by letter, from c to b. `'` c
 There is no official roadmap, I just have some random ideas:
 
 - Better project name?
-- Progress bar
 - Fingering diagram (and option to turn it off)
 - "Play any note to start", to not give fixed time to get instrument and fingers into position.
 - Stop when song ends

@@ -57,7 +57,6 @@ func button(win *pixelgl.Window, location pixel.Rect, label string) bool {
 	if location.Contains(win.MousePosition()) {
 		uistate.hotitem = id
 		if uistate.activeitem == 0 && win.Pressed(pixelgl.MouseButtonLeft) {
-			fmt.Println(id, "pressed, becomes active")
 			uistate.activeitem = id
 		}
 	}

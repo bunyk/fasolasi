@@ -91,6 +91,27 @@ func renderNote(imd *imdraw.IMDraw, time, width, ybase float64, colorful bool, n
 	imd.Rectangle(border)
 }
 
+func renderProgress(win *pixelgl.Window, progress float64) {
+	imd := imdraw.New(nil)
+	width := win.Bounds().W()
+
+	imd.Color = colornames.Black
+	imd.Push(
+		pixel.V(0, 0),
+		pixel.V(width, 10),
+	)
+	imd.Rectangle(1)
+
+	imd.Color = colornames.Red
+	imd.Push(
+		pixel.V(0, 0),
+		pixel.V(width*progress, 10),
+	)
+	imd.Rectangle(0)
+
+	imd.Draw(win)
+}
+
 func renderNoteLines(win *pixelgl.Window) {
 	imd := imdraw.New(nil)
 	imd.Color = colornames.Black
