@@ -13,10 +13,6 @@ type MainMenu struct {
 
 func (mm *MainMenu) Loop(win *pixelgl.Window) common.Scene {
 
-	if win.Pressed(pixelgl.KeyEscape) {
-		win.SetClosed(true)
-	}
-
 	// Clear window and draw UI
 	win.Clear(config.BackgroundColor)
 
@@ -26,15 +22,17 @@ func (mm *MainMenu) Loop(win *pixelgl.Window) common.Scene {
 		win.Update()
 	}()
 
-	fl := FlexRows(win.Bounds().Norm(), config.MenuButtonWidth, config.MenuButtonHeight, config.MenuVerticalSpacing, 4)
-
-	if button(win, fl(0), "Play") {
+	choice := Menu(win, win.Bounds(), []string{
+		"Play",
+		"Exit",
+	})
+	if win.Pressed(pixelgl.KeyEscape) {
+		choice = 1
+	}
+	switch choice {
+	case 0:
 		return NewSongMenu()
-	}
-	if button(win, fl(1), "Settings") {
-		fmt.Println("TODO")
-	}
-	if button(win, fl(2), "Exit") {
+	case 1:
 		fmt.Println("Bye")
 		win.SetClosed(true)
 	}

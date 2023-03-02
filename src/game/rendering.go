@@ -97,15 +97,15 @@ func renderProgress(win *pixelgl.Window, progress float64) {
 
 	imd.Color = colornames.Black
 	imd.Push(
-		pixel.V(0, 0),
-		pixel.V(width, 10),
+		pixel.V(2, 2),
+		pixel.V(width-2, 10),
 	)
 	imd.Rectangle(1)
 
 	imd.Color = colornames.Red
 	imd.Push(
-		pixel.V(0, 0),
-		pixel.V(width*progress, 10),
+		pixel.V(2, 2),
+		pixel.V(2+(width-4)*progress, 9),
 	)
 	imd.Rectangle(0)
 
@@ -136,12 +136,18 @@ func renderNoteLines(win *pixelgl.Window) {
 	imd.Draw(win)
 }
 
-func renderScore(win *pixelgl.Window, score int) {
+func renderScore(win *pixelgl.Window, score int, big bool) {
 	scoreTxt := text.New(pixel.ZV, common.TextAtlas)
 	scoreTxt.Color = colornames.Black
 	scoreTxt.Clear()
 	fmt.Fprintf(scoreTxt, "%d", score)
-	scoreTxt.Draw(win, pixel.IM.Moved(pixel.V(0, win.Bounds().H()-40)))
+	var pos pixel.Matrix
+	if big {
+		pos = pixel.IM.Moved(win.Bounds().Center()).Scaled(win.Bounds().Center(), 5)
+	} else {
+		pos = pixel.IM.Moved(pixel.V(0, win.Bounds().H()-40))
+	}
+	scoreTxt.Draw(win, pos)
 }
 
 func hightLightNote(win *pixelgl.Window, color color.Color, note notes.Pitch) {

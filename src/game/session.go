@@ -92,9 +92,6 @@ func (s *Session) currentNote() notes.Pitch {
 	return notes.Pause
 }
 
-func (s *Session) update(note notes.Pitch) {
-}
-
 // Notes don't stop, and you need to hit correct ones in time
 func (s *Session) challengeUpdate(dt float64, note notes.Pitch) {
 	s.Duration = time.Since(s.Start).Seconds()
@@ -139,11 +136,6 @@ func (s *Session) challengeUpdate(dt float64, note notes.Pitch) {
 // Notes move only while you play correct note, to progress - play all the notes in correct orders.
 // Obeying durations is optional.
 func (s *Session) trainingUpdate(dt float64, note notes.Pitch) {
-	if s.Finished() {
-		s.Duration += dt
-		s.Played = nil
-		return
-	}
 	nn := s.nextNote()
 	if note.Name != "p" {
 		if len(s.Played) > 0 { // we were already playing some note
@@ -191,7 +183,9 @@ func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 
 	// Processing
 	s.currentlyPlaying = note
-	s.updateMode(dt, note)
+	if !s.Finished() {
+		s.updateMode(dt, note)
+	}
 
 	// Rendering
 	win.Clear(config.BackgroundColor)
@@ -200,7 +194,7 @@ func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 	renderNoteLines(win)
 	renderNotes(win, s.Song, s.Played, s.Duration)
 	renderProgress(win, s.Duration/s.SongDuration)
-	renderScore(win, int(s.Score*100))
+	renderScore(win, int(s.Score*100), s.Finished())
 	return s
 }
 

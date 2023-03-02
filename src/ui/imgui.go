@@ -112,3 +112,15 @@ func slider(win *pixelgl.Window, location pixel.Rect, max int, value *int) bool 
   }
 }
 */
+
+func Menu(win *pixelgl.Window, location pixel.Rect, items []string) int {
+	fl := FlexRows(location, config.MenuButtonWidth, config.MenuButtonHeight, config.MenuVerticalSpacing, len(items))
+
+	clicked := -1
+	for i, label := range items {
+		if button(win, fl(i), label) {
+			clicked = i
+		}
+	}
+	return clicked
+}

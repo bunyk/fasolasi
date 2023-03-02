@@ -19,17 +19,21 @@ func (mm *ModeMenu) Loop(win *pixelgl.Window) common.Scene {
 		win.Update()
 	}()
 
-	fl := FlexRows(win.Bounds().Norm(), config.MenuButtonWidth, config.MenuButtonHeight, config.MenuVerticalSpacing, 3)
-
-	if button(win, fl(0), "Training") {
-		return game.NewSession(mm.Song, "training")
+	choice := Menu(win, win.Bounds(), []string{
+		"Training",
+		"Challenge",
+		"← back to songs",
+	})
+	if win.Pressed(pixelgl.KeyEscape) {
+		choice = 2
 	}
-	if button(win, fl(1), "Challenge") {
+	switch choice {
+	case 0:
+		return game.NewSession(mm.Song, "training")
+	case 1:
 		return game.NewSession(mm.Song, "challenge")
-	} // TODO: add different complexities (configure BPM)
-	if button(win, fl(2), "← back to songs") || win.Pressed(pixelgl.KeyEscape) {
+	case 2:
 		return &SongMenu{}
 	}
-
 	return mm
 }

@@ -21,18 +21,16 @@ Notes are separated by whitespace, pitch is marked by letter, from c to b. `'` c
 ## TODO
 There is no official roadmap, I just have some random ideas:
 
-- Stop when song ends
 - Fingering diagram (and option to turn it off)
 - "Play any note to start", to not give fixed time to get instrument and fingers into position.
-- More songs 
-- Leaderboard
+- Highscores/Leaderboard
 - Training mode,
 	- Score should be proportional to extra time you spend on the song.
 - Animations:
 	- Thumb ups or thums down fly from note you play to the score, or something like that.
 	- Vibrate the note currently played? 
 	- Some ideas of visualizations from shadertoy?  https://github.com/faiface/pixel-examples/tree/master/community/seascape-shader ? 
-- Recording mode. Make game listen to some music and just try to write down notes played, to create song file without text editing.
+- Recording/creative mode. Make game listen to some music and just try to write down notes played, to create song file without text editing.
 - Create binary releases for the users without Go
 - Better project name?
 
