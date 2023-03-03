@@ -204,6 +204,8 @@ func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 	}
 	renderProgress(win, s.Duration/s.SongDuration)
 	renderScore(win, s.RoundedScore(), s.Finished())
+
+	win.Update()
 	return s
 }
 

@@ -36,8 +36,6 @@ func run() {
 	for !win.Closed() {
 		currentScene = currentScene.Loop(win)
 
-		win.Update()
-
 		frames++
 		select {
 		case <-second:
