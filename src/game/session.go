@@ -193,6 +193,7 @@ func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 	hightLightNote(win, colornames.Salmon, s.currentlyPlaying)
 	renderNoteLines(win)
 	renderNotes(win, s.Song, s.Played, s.Duration)
+	renderFingering(win) // TODO: pass here note that needs to be played
 	renderProgress(win, s.Duration/s.SongDuration)
 	renderScore(win, int(s.Score*100), s.Finished())
 	return s

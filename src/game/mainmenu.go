@@ -1,10 +1,11 @@
-package ui
+package game
 
 import (
 	"fmt"
 
 	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
+	"github.com/bunyk/fasolasi/src/ui"
 	"github.com/faiface/pixel/pixelgl"
 )
 
@@ -16,13 +17,10 @@ func (mm *MainMenu) Loop(win *pixelgl.Window) common.Scene {
 	// Clear window and draw UI
 	win.Clear(config.BackgroundColor)
 
-	imguiPrepare()
-	defer func() {
-		imguiFinish(win)
-		win.Update()
-	}()
+	ui.Prepare()
+	defer ui.Finish(win)
 
-	choice := Menu(win, win.Bounds(), []string{
+	choice := ui.Menu(win, win.Bounds(), []string{
 		"Play",
 		"Exit",
 	})

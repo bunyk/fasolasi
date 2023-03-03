@@ -1,9 +1,9 @@
-package ui
+package game
 
 import (
 	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
-	"github.com/bunyk/fasolasi/src/game"
+	"github.com/bunyk/fasolasi/src/ui"
 	"github.com/faiface/pixel/pixelgl"
 )
 
@@ -13,13 +13,10 @@ type ModeMenu struct {
 
 func (mm *ModeMenu) Loop(win *pixelgl.Window) common.Scene {
 	win.Clear(config.BackgroundColor)
-	imguiPrepare()
-	defer func() {
-		imguiFinish(win)
-		win.Update()
-	}()
+	ui.Prepare()
+	defer ui.Finish(win)
 
-	choice := Menu(win, win.Bounds(), []string{
+	choice := ui.Menu(win, win.Bounds(), []string{
 		"Training",
 		"Challenge",
 		"← back to songs",
@@ -29,9 +26,9 @@ func (mm *ModeMenu) Loop(win *pixelgl.Window) common.Scene {
 	}
 	switch choice {
 	case 0:
-		return game.NewSession(mm.Song, "training")
+		return NewSession(mm.Song, "training")
 	case 1:
-		return game.NewSession(mm.Song, "challenge")
+		return NewSession(mm.Song, "challenge")
 	case 2:
 		return &SongMenu{}
 	}

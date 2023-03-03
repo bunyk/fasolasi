@@ -1,4 +1,4 @@
-package ui
+package game
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"github.com/aquilax/truncate"
 	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
+	"github.com/bunyk/fasolasi/src/ui"
 	"github.com/faiface/pixel/pixelgl"
 )
 
@@ -44,17 +45,14 @@ func (sm *SongMenu) Loop(win *pixelgl.Window) common.Scene {
 		return &MainMenu{}
 	}
 	win.Clear(config.BackgroundColor)
-	imguiPrepare()
-	defer func() {
-		imguiFinish(win)
-		win.Update()
-	}()
+	ui.Prepare()
+	defer ui.Finish(win)
 
-	fl := FlexRows(win.Bounds().Norm(), config.MenuButtonWidth, config.MenuButtonHeight, config.MenuVerticalSpacing, config.MenuMaxItems)
+	fl := ui.FlexRows(win.Bounds().Norm(), config.MenuButtonWidth, config.MenuButtonHeight, config.MenuVerticalSpacing, config.MenuMaxItems)
 
 	haveButtons := 0
 	if sm.Offset > 0 {
-		if button(win, fl(haveButtons), "↑ Up") {
+		if ui.Button(win, fl(haveButtons), "↑ Up") {
 			sm.Offset-- // Go up
 		}
 		haveButtons++
@@ -72,20 +70,20 @@ func (sm *SongMenu) Loop(win *pixelgl.Window) common.Scene {
 	}
 
 	for _, song := range sm.Songs[sm.Offset : sm.Offset+limit] {
-		if button(win, fl(haveButtons), cleanupName(song)) {
+		if ui.Button(win, fl(haveButtons), cleanupName(song)) {
 			return &ModeMenu{song}
 		}
 		haveButtons++
 	}
 
 	if showDown {
-		if button(win, fl(haveButtons), "↓ Down") {
+		if ui.Button(win, fl(haveButtons), "↓ Down") {
 			sm.Offset++ // Go down
 			fmt.Println("Down, new offset:", sm.Offset)
 		}
 		haveButtons++
 	}
-	if button(win, fl(haveButtons), "← Back") {
+	if ui.Button(win, fl(haveButtons), "← Back") {
 		return &MainMenu{}
 	}
 

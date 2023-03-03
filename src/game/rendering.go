@@ -7,6 +7,7 @@ import (
 	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/notes"
+	"github.com/bunyk/fasolasi/src/ui"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
@@ -92,6 +93,12 @@ func renderNote(imd *imdraw.IMDraw, time, width, ybase float64, colorful bool, n
 }
 
 func renderProgress(win *pixelgl.Window, progress float64) {
+	if progress > 1.0 {
+		progress = 1.0
+	}
+	if progress < 0.0 {
+		progress = 0.0
+	}
 	imd := imdraw.New(nil)
 	width := win.Bounds().W()
 
@@ -105,7 +112,7 @@ func renderProgress(win *pixelgl.Window, progress float64) {
 	imd.Color = colornames.Red
 	imd.Push(
 		pixel.V(2, 2),
-		pixel.V(2+(width-4)*progress, 9),
+		pixel.V(2+(width-5)*progress, 9),
 	)
 	imd.Rectangle(0)
 
@@ -181,4 +188,26 @@ func soundVisualization(win *pixelgl.Window, col color.Color, data [][2]float64)
 	}
 	imd.Line(1)
 	imd.Draw(win)
+}
+
+var recorderSprite *pixel.Sprite
+
+func init() {
+	pic, err := ui.LoadPicture("sprites/recorder.png")
+	if err != nil {
+		panic(err)
+	}
+
+	recorderSprite = pixel.NewSprite(pic, pic.Bounds())
+}
+
+func renderFingering(win *pixelgl.Window) {
+	if !config.ShowFingering {
+		return
+	}
+	scale := win.Bounds().H() / recorderSprite.Frame().H()
+	recorderSprite.Draw(win, pixel.IM.
+		Scaled(pixel.ZV, scale).
+		Moved(pixel.V(50, win.Bounds().H()/2.0)),
+	)
 }

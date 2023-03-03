@@ -23,13 +23,13 @@ var uistate = UiState{}
 var imd = imdraw.New(nil)
 
 // Prepare for IMGUI code
-func imguiPrepare() {
+func Prepare() {
 	uistate.hotitem = 0
 	uistate.maxitem = 0
 }
 
-// Finish up after IMGUI code
-func imguiFinish(win *pixelgl.Window) {
+// Finish up after IMGUI code, end frame
+func Finish(win *pixelgl.Window) {
 	if win.Pressed(pixelgl.MouseButtonLeft) {
 		if uistate.activeitem == 0 {
 			// If the mouse is clicked, but no widget is active, we need to mark the active item unavailable so that we won't activate the next widget we drag the cursor onto.
@@ -39,6 +39,7 @@ func imguiFinish(win *pixelgl.Window) {
 		// If mouse isn't down, we need to clear the active item in order not to make the widgets confused on the active state (and to enable the next clicked widget to become active).
 		uistate.activeitem = 0
 	}
+	win.Update()
 }
 
 func nextID() int {
@@ -46,7 +47,7 @@ func nextID() int {
 	return uistate.maxitem
 }
 
-func button(win *pixelgl.Window, location pixel.Rect, label string) bool {
+func Button(win *pixelgl.Window, location pixel.Rect, label string) bool {
 	txt := text.New(location.Center(), common.TextAtlas)
 	txt.Color = config.ButtonTextColor
 	txt.Dot.X -= txt.BoundsOf(label).W() / 2
@@ -118,7 +119,7 @@ func Menu(win *pixelgl.Window, location pixel.Rect, items []string) int {
 
 	clicked := -1
 	for i, label := range items {
-		if button(win, fl(i), label) {
+		if Button(win, fl(i), label) {
 			clicked = i
 		}
 	}

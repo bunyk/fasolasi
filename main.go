@@ -9,7 +9,7 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 
 	"github.com/bunyk/fasolasi/src/common"
-	"github.com/bunyk/fasolasi/src/ui"
+	"github.com/bunyk/fasolasi/src/game"
 )
 
 func run() {
@@ -23,13 +23,14 @@ func run() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	win.SetSmooth(true)
 
 	// FPS tracking
 	frames := 0
 	second := time.Tick(time.Second * 5)
 
 	var currentScene common.Scene
-	currentScene = &ui.MainMenu{}
+	currentScene = &game.MainMenu{}
 	// currentScene = game.NewSession("A short one.txt", "challenge")
 
 	for !win.Closed() {
