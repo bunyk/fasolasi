@@ -45,6 +45,7 @@ func (sm *SongMenu) Loop(win *pixelgl.Window) common.Scene {
 		return &MainMenu{}
 	}
 	win.Clear(config.BackgroundColor)
+	renderFingering(win)
 	ui.Prepare()
 	defer ui.Finish(win)
 

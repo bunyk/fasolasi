@@ -13,9 +13,8 @@ type MainMenu struct {
 }
 
 func (mm *MainMenu) Loop(win *pixelgl.Window) common.Scene {
-
-	// Clear window and draw UI
 	win.Clear(config.BackgroundColor)
+	renderFingering(win)
 
 	ui.Prepare()
 	defer ui.Finish(win)

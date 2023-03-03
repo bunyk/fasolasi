@@ -47,13 +47,16 @@ func nextID() int {
 	return uistate.maxitem
 }
 
-func Button(win *pixelgl.Window, location pixel.Rect, label string) bool {
+func Label(win *pixelgl.Window, location pixel.Rect, value string) {
 	txt := text.New(location.Center(), common.TextAtlas)
 	txt.Color = config.ButtonTextColor
-	txt.Dot.X -= txt.BoundsOf(label).W() / 2
-	txt.Dot.Y -= txt.BoundsOf(label).H() / 2
-	fmt.Fprintln(txt, label)
+	txt.Dot.X -= txt.BoundsOf(value).W() / 2
+	txt.Dot.Y -= txt.BoundsOf(value).H() / 2
+	fmt.Fprintln(txt, value)
+	txt.Draw(win, pixel.IM)
+}
 
+func Button(win *pixelgl.Window, location pixel.Rect, label string) bool {
 	id := nextID()
 	if location.Contains(win.MousePosition()) {
 		uistate.hotitem = id
@@ -88,7 +91,7 @@ func Button(win *pixelgl.Window, location pixel.Rect, label string) bool {
 	}
 	imd.Rectangle(0)
 	imd.Draw(win)
-	txt.Draw(win, pixel.IM)
+	Label(win, location, label)
 
 	// If button is hot and active, but mouse button is not
 	// down, the user must have clicked the button.

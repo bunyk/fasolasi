@@ -15,6 +15,8 @@ import (
 
 type Session struct {
 	Song             []notes.SongNote
+	SongName         string
+	ModeName         string
 	Played           []playedNote
 	currentlyPlaying notes.Pitch
 	Score            float64
@@ -39,9 +41,11 @@ func NewSession(filename, mode string) common.Scene {
 		log.Fatal(err)
 	}
 	s := &Session{
-		Played: make([]playedNote, 0, 100),
-		Song:   song,
-		ear:    ear.New(config.MicrophoneSampleRate, config.MicrophoneBufferLength),
+		Played:   make([]playedNote, 0, 100),
+		Song:     song,
+		SongName: filename,
+		ModeName: mode,
+		ear:      ear.New(config.MicrophoneSampleRate, config.MicrophoneBufferLength),
 	}
 	if mode == "challenge" {
 		s.updateMode = s.challengeUpdate
@@ -183,7 +187,9 @@ func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 
 	// Processing
 	s.currentlyPlaying = note
-	if !s.Finished() {
+	if s.Finished() {
+		return &FinishScene{Song: s.SongName, Mode: s.ModeName, Score: s.RoundedScore()}
+	} else {
 		s.updateMode(dt, note)
 	}
 
@@ -193,10 +199,16 @@ func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 	hightLightNote(win, colornames.Salmon, s.currentlyPlaying)
 	renderNoteLines(win)
 	renderNotes(win, s.Song, s.Played, s.Duration)
-	renderFingering(win) // TODO: pass here note that needs to be played
+	if config.ShowFingering {
+		renderFingering(win) // TODO: pass here note that needs to be played
+	}
 	renderProgress(win, s.Duration/s.SongDuration)
-	renderScore(win, int(s.Score*100), s.Finished())
+	renderScore(win, s.RoundedScore(), s.Finished())
 	return s
+}
+
+func (s Session) RoundedScore() int {
+	return int(s.Score * 100)
 }
 
 func KeyboardPitch(win *pixelgl.Window) float64 {

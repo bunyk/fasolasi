@@ -202,9 +202,6 @@ func init() {
 }
 
 func renderFingering(win *pixelgl.Window) {
-	if !config.ShowFingering {
-		return
-	}
 	scale := win.Bounds().H() / recorderSprite.Frame().H()
 	recorderSprite.Draw(win, pixel.IM.
 		Scaled(pixel.ZV, scale).
