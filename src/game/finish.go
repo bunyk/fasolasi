@@ -12,6 +12,7 @@ import (
 type FinishScene struct {
 	Song  string
 	Mode  string
+	BPM   int
 	Score int
 }
 
@@ -26,7 +27,7 @@ func (fs *FinishScene) Loop(win *pixelgl.Window) common.Scene {
 	ui.Label(win, fl(0), fmt.Sprintf("Score: %d", fs.Score))
 
 	if ui.Button(win, fl(1), "Retry") {
-		return NewSession(fs.Song, fs.Mode)
+		return NewSession(fs.Song, fs.Mode, fs.BPM)
 	}
 	if ui.Button(win, fl(2), "Select another song") {
 		return NewSongMenu()

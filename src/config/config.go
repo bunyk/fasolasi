@@ -33,9 +33,9 @@ var ButtonShadowColor = colornames.Darkgray
 var SelectionColor = colornames.Lightblue
 
 const MenuButtonWidth = 500.0
-const MenuButtonHeight = 60.0
-const MenuVerticalSpacing = 30.0
+const MenuButtonHeight = 50.0
+const MenuVerticalSpacing = 25.0
 const MenuButtonMaxChars = 30
-const MenuMaxItems = 7
+const MenuMaxItems = 10
 
 const ShowFingering = false

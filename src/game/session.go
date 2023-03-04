@@ -17,6 +17,7 @@ type Session struct {
 	Song             []notes.SongNote
 	SongName         string
 	ModeName         string
+	BPM              int
 	Played           []playedNote
 	currentlyPlaying notes.Pitch
 	Score            float64
@@ -34,9 +35,9 @@ type playedNote struct {
 	Correct bool
 }
 
-func NewSession(filename, mode string) common.Scene {
+func NewSession(filename, mode string, bpm int) common.Scene {
 	fmt.Println("Initializing game session for", filename)
-	song, err := notes.ReadSong(config.SongsFolder + "/" + filename)
+	song, err := notes.ReadSong(config.SongsFolder+"/"+filename, 240.0/float64(bpm))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,6 +46,7 @@ func NewSession(filename, mode string) common.Scene {
 		Song:     song,
 		SongName: filename,
 		ModeName: mode,
+		BPM:      bpm,
 		ear:      ear.New(config.MicrophoneSampleRate, config.MicrophoneBufferLength),
 	}
 	if mode == "challenge" {
@@ -188,7 +190,7 @@ func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 	// Processing
 	s.currentlyPlaying = note
 	if s.Finished() {
-		return &FinishScene{Song: s.SongName, Mode: s.ModeName, Score: s.RoundedScore()}
+		return &FinishScene{Song: s.SongName, Mode: s.ModeName, Score: s.RoundedScore(), BPM: s.BPM}
 	} else {
 		s.updateMode(dt, note)
 	}

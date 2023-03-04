@@ -79,7 +79,10 @@ func (sm *SongMenu) Loop(win *pixelgl.Window) common.Scene {
 
 	if showDown {
 		if ui.Button(win, fl(haveButtons), "↓ Down") {
-			sm.Offset++ // Go down
+			sm.Offset++         // Go down
+			if sm.Offset == 1 { // Otherwise it will look like first item in list is replaced but up button
+				sm.Offset++
+			}
 			fmt.Println("Down, new offset:", sm.Offset)
 		}
 		haveButtons++

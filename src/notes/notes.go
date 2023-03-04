@@ -128,9 +128,10 @@ func noteFromMatch(parts []string, defaultDuration, fullDuration float64) (SongN
 	}, nil
 }
 
-// TODO: configure BPM
-// In song file or as parameter?
-func ReadSong(filename string) (song []SongNote, err error) {
+// bpm - beats per minute
+// beat is a note in denominator of the time signature. Ex: in 4/4, 3/4 - beat is quarter note
+// So duration of full note for /4 tempo is 60 / bpm * 4 = 240 / bpm. Ex, for 60 bpm - 4 seconds. 120 bpm - 2 seconds.
+func ReadSong(filename string, fullDuration float64) (song []SongNote, err error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -140,7 +141,6 @@ func ReadSong(filename string) (song []SongNote, err error) {
 	matches := noteRe.FindAllStringSubmatch(string(data), -1)
 
 	time := config.TimeBeforeFirstNote // give some initial time to prepare for first note
-	fullDuration := 3.0
 	defaultDuration := fullDuration / 4
 	for _, match := range matches {
 		n, err := noteFromMatch(match, defaultDuration, fullDuration)
@@ -148,7 +148,7 @@ func ReadSong(filename string) (song []SongNote, err error) {
 			return nil, err
 		}
 		n.Time = time
-		time += n.Duration + config.BreathInterval
+		time += n.Duration + config.BreathInterval*fullDuration
 		defaultDuration = n.Duration
 		song = append(song, n)
 	}
