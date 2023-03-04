@@ -19,18 +19,18 @@ type Pitch struct {
 
 var FluteRange []Pitch
 var octave = []Pitch{
-	{523.25, "c", -1, 0.5},
-	{554.37, "cis", -0.75, 0.25},
-	{587.33, "d", -0.5, 0.5},
-	{622.25, "dis", -0.25, 0.25},
-	{659.25, "e", 0, 0.5},
-	{698.46, "f", 0.5, 0.5},
-	{739.99, "fis", 0.75, 0.25},
-	{783.99, "g", 1, 0.5},
-	{830.61, "gis", 1.25, 0.25},
-	{880.00, "a", 1.5, 0.5},
-	{932.33, "bes", 1.75, 0.25},
-	{987.77, "b", 2, 0.5},
+	{523.25, "c", -1, config.WhiteNoteWidth},
+	{554.37, "cis", -0.75, config.BlackNoteWidth},
+	{587.33, "d", -0.5, config.WhiteNoteWidth},
+	{622.25, "dis", -0.25, config.BlackNoteWidth},
+	{659.25, "e", 0, config.WhiteNoteWidth},
+	{698.46, "f", 0.5, config.WhiteNoteWidth},
+	{739.99, "fis", 0.75, config.BlackNoteWidth},
+	{783.99, "g", 1, config.WhiteNoteWidth},
+	{830.61, "gis", 1.25, config.BlackNoteWidth},
+	{880.00, "a", 1.5, config.WhiteNoteWidth},
+	{932.33, "bes", 1.75, config.BlackNoteWidth},
+	{987.77, "b", 2, config.WhiteNoteWidth},
 }
 
 var Pause = Pitch{-1.0, "p", 0, 0}
@@ -48,7 +48,7 @@ func init() {
 			Height:    n.Height,
 		})
 	}
-	FluteRange = append(FluteRange, Pitch{2093.00, "c''", 6, 0.5})
+	FluteRange = append(FluteRange, Pitch{2093.00, "c''", 6, config.WhiteNoteWidth})
 
 	pitchByName = make(map[string]Pitch)
 	for _, p := range FluteRange {

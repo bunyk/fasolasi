@@ -31,7 +31,7 @@ func run() {
 
 	var currentScene common.Scene
 	currentScene = &game.MainMenu{}
-	// currentScene = game.NewSession("A short one.txt", "challenge")
+	// currentScene = game.NewSession("A short one.txt", "challenge", 20)
 
 	for !win.Closed() {
 		currentScene = currentScene.Loop(win)

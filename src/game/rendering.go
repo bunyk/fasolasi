@@ -183,7 +183,7 @@ func soundVisualization(win *pixelgl.Window, col color.Color, data [][2]float64)
 	if width > 0 {
 		every = float64(len(data)) / width
 	}
-	for i := 0.0; i < width; i += 1.0 {
+	for i := 0.0; i < width; i += 2.0 {
 		imd.Push(pixel.V(float64(i), height*(0.1+data[int(i*every)][0]*0.2)))
 	}
 	imd.Line(1)

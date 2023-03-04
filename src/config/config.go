@@ -13,7 +13,9 @@ const SongsFolder = "./songs"
 const MicrophoneSampleRate = 188200
 const MicrophoneBufferLength = 11025 / 2
 
-const NoteSPS = 0.15         // Note speed in screens per second
+const NoteSPS = 0.15 // Note speed in screens per second
+const BlackNoteWidth = 0.3
+const WhiteNoteWidth = 0.5
 const TimeLinePosition = 0.3 // Position of time line in screens from the left
 
 // We draw it more to the right, because you should blow earlier, audio input buffer takes time to fill
