@@ -4,7 +4,7 @@ FaSoLaSi is a free and open source musical game for recorder (flute) that allows
 ## Gameplay
 Gameplay is inspired by Guitar Hero, Frets on Fire, Synthesia and similar games. You have notes running at you, and you need to start and end playing them in the right moment. The faster you react - the better score you have. There is an additional training mode, where notes wait until you play them.
 
-[![Video of a gameplay](https://img.youtube.com/vi/oOcbo2rJ_a8/0.jpg)](https://youtu.be/oOcbo2rJ_a8?t=159)
+[![Gameplay](./docs/screenshots/2023-03-04.png)](https://www.youtube.com/watch?v=-9oLTsaAoIM)
 
 ## Editing songs
 Songs currently are written in plain text files using [LilyPond-like](http://lilypond.org/doc/v2.18/Documentation/notation/writing-pitches) simplified notation. Example:
@@ -22,6 +22,7 @@ Notes are separated by whitespace, pitch is marked by letter, from c to b. `'` c
 There is no official roadmap, I just have some random ideas:
 
 - "Play any note to start", to not give fixed time to get instrument and fingers into position.
+- Display note names
 - Fingering diagram (and option to turn it off)
 - Highscores/Leaderboard
 - Training mode,
