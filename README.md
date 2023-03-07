@@ -21,8 +21,6 @@ Notes are separated by whitespace, pitch is marked by letter, from c to b. `'` c
 ## TODO
 There is no official roadmap, I just have some random ideas:
 
-- "Play any note to start", to not give fixed time to get instrument and fingers into position.
-- Display note names
 - Fingering diagram (and option to turn it off)
 - Highscores/Leaderboard
 - Training mode,

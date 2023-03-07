@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 
-	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/notes"
 	"github.com/bunyk/fasolasi/src/ui"
@@ -20,18 +19,15 @@ func time2X(width, time, currentTime float64) float64 {
 }
 
 func renderNotes(win *pixelgl.Window, song []notes.SongNote, played []playedNote, time float64) {
-	imd := imdraw.New(nil)
-	imd.EndShape = imdraw.SharpEndShape
 	width := win.Bounds().W()
 	ybase := float64(win.Bounds().H()/2 - config.NoteRadius*4)
 
 	for _, note := range song {
-		renderNote(imd, time, width, ybase, false, note)
+		renderNote(win, time, width, ybase, false, note)
 	}
 	for _, note := range played {
-		renderNote(imd, time, width, ybase, note.Correct, note.SongNote)
+		renderNote(win, time, width, ybase, note.Correct, note.SongNote)
 	}
-	imd.Draw(win)
 }
 
 var rainbow = []color.Color{
@@ -43,7 +39,7 @@ var rainbow = []color.Color{
 	colornames.Violet,
 }
 
-func renderNote(imd *imdraw.IMDraw, time, width, ybase float64, colorful bool, note notes.SongNote) {
+func renderNote(win *pixelgl.Window, time, width, ybase float64, colorful bool, note notes.SongNote) {
 	if note.Pitch.Name == "p" {
 		return
 	}
@@ -61,6 +57,8 @@ func renderNote(imd *imdraw.IMDraw, time, width, ybase float64, colorful bool, n
 	}
 	ycenter := ybase + note.Pitch.Bottom*config.NoteRadius*2
 
+	imd := imdraw.New(nil)
+	imd.EndShape = imdraw.SharpEndShape
 	if note.Pitch.HasAdditionalLine() {
 		imd.Color = colornames.Black
 		imd.Push(
@@ -70,11 +68,14 @@ func renderNote(imd *imdraw.IMDraw, time, width, ybase float64, colorful bool, n
 		imd.Line(1)
 	}
 	border := 0.0
+	var textColor color.Color = colornames.White
 	if colorful {
 		imd.Color = rainbow[(10+int(note.Pitch.Bottom*4))%len(rainbow)]
+		textColor = oppositeColor(imd.Color)
 	} else {
 		if note.Pitch.Height >= 0.5 { // white key
 			imd.Color = colornames.White
+			textColor = colornames.Black
 			imd.Push(
 				pixel.V(startX+1, ycenter-note.Pitch.Height*config.NoteRadius+1),
 				pixel.V(endX-1, ycenter+note.Pitch.Height*config.NoteRadius-1),
@@ -85,11 +86,18 @@ func renderNote(imd *imdraw.IMDraw, time, width, ybase float64, colorful bool, n
 		imd.Color = colornames.Black
 	}
 
-	imd.Push(
-		pixel.V(startX+1, ycenter-note.Pitch.Height*config.NoteRadius+1),
-		pixel.V(endX-1, ycenter+note.Pitch.Height*config.NoteRadius-1),
-	)
+	corner1 := pixel.V(startX+1, ycenter-note.Pitch.Height*config.NoteRadius+1)
+	corner2 := pixel.V(endX-1, ycenter+note.Pitch.Height*config.NoteRadius-1)
+	imd.Push(corner1, corner2)
 	imd.Rectangle(border)
+	imd.Draw(win)
+
+	ui.Label(win, pixel.Rect{Min: corner1, Max: corner2}, note.Pitch.Title(), textColor)
+}
+
+func oppositeColor(c color.Color) color.Color {
+	r, g, b, _ := c.RGBA()
+	return color.RGBA{uint8(255 - r), uint8(255 - g), uint8(255 - b), 255}
 }
 
 func renderProgress(win *pixelgl.Window, progress float64) {
@@ -144,7 +152,7 @@ func renderNoteLines(win *pixelgl.Window) {
 }
 
 func renderScore(win *pixelgl.Window, score int, big bool) {
-	scoreTxt := text.New(pixel.ZV, common.TextAtlas)
+	scoreTxt := text.New(pixel.ZV, ui.TextAtlas)
 	scoreTxt.Color = colornames.Black
 	scoreTxt.Clear()
 	fmt.Fprintf(scoreTxt, "%d", score)
@@ -207,4 +215,13 @@ func renderFingering(win *pixelgl.Window) {
 		Scaled(pixel.ZV, scale).
 		Moved(pixel.V(50, win.Bounds().H()/2.0)),
 	)
+}
+
+func renderMessage(win *pixelgl.Window, msg string) {
+	txt := text.New(pixel.ZV, ui.TextAtlas)
+	txt.Color = colornames.Black
+	fmt.Fprintln(txt, msg)
+	var pos pixel.Matrix
+	pos = pixel.IM.Moved(win.Bounds().Center().Sub(txt.Bounds().Center()))
+	txt.Draw(win, pos)
 }

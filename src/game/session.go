@@ -5,10 +5,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/ear"
 	"github.com/bunyk/fasolasi/src/notes"
+	"github.com/bunyk/fasolasi/src/ui"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
 )
@@ -21,6 +21,7 @@ type Session struct {
 	Played           []playedNote
 	currentlyPlaying notes.Pitch
 	Score            float64
+	PlayToStart      float64   // if this is < 1.0 game is not started yet
 	Start            time.Time // time of start of the session
 	Duration         float64   // session duration, progress of song in seconds
 	SongDuration     float64   // Duration of the song in seconds
@@ -35,7 +36,7 @@ type playedNote struct {
 	Correct bool
 }
 
-func NewSession(filename, mode string, bpm int) common.Scene {
+func NewSession(filename, mode string, bpm int) ui.Scene {
 	fmt.Println("Initializing game session for", filename)
 	song, err := notes.ReadSong(config.SongsFolder+"/"+filename, 240.0/float64(bpm))
 	if err != nil {
@@ -43,7 +44,7 @@ func NewSession(filename, mode string, bpm int) common.Scene {
 	}
 	s := &Session{
 		Played:   make([]playedNote, 0, 100),
-		Song:     song,
+		Song:     append([]notes.SongNote{{Duration: 1.0, Time: -1.0, Pitch: notes.C}}, song...),
 		SongName: filename,
 		ModeName: mode,
 		BPM:      bpm,
@@ -55,9 +56,6 @@ func NewSession(filename, mode string, bpm int) common.Scene {
 		s.updateMode = s.trainingUpdate
 	}
 	s.SongDuration = song[len(song)-1].End()
-
-	fmt.Println("Go!")
-	s.Start = time.Now()
 	s.LastUpdateTime = time.Now()
 	return s
 }
@@ -176,7 +174,7 @@ func (s *Session) trainingUpdate(dt float64, note notes.Pitch) {
 	}
 }
 
-func (s *Session) Loop(win *pixelgl.Window) common.Scene {
+func (s *Session) Loop(win *pixelgl.Window) ui.Scene {
 	dt := time.Since(s.LastUpdateTime).Seconds()
 	s.LastUpdateTime = time.Now()
 
@@ -185,14 +183,23 @@ func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 	if kp > 0.0 {
 		s.ear.Pitch = kp
 	}
-	note, _ := notes.GuessNote(s.ear.Pitch)
+	s.currentlyPlaying, _ = notes.GuessNote(s.ear.Pitch)
 
-	// Processing
-	s.currentlyPlaying = note
-	if s.Finished() {
-		return &FinishScene{Song: s.SongName, Mode: s.ModeName, Score: s.RoundedScore(), BPM: s.BPM}
+	if s.PlayToStart < 1.0 {
+		if s.currentlyPlaying == notes.C { // Play c for one second to start
+			s.PlayToStart += dt
+		}
+		if s.PlayToStart >= 1.0 {
+			fmt.Println("Go!")
+			s.Start = time.Now()
+		}
 	} else {
-		s.updateMode(dt, note)
+		// Processing
+		if s.Finished() {
+			return &FinishScene{Song: s.SongName, Mode: s.ModeName, Score: s.RoundedScore(), BPM: s.BPM}
+		} else {
+			s.updateMode(dt, s.currentlyPlaying)
+		}
 	}
 
 	// Rendering
@@ -205,7 +212,14 @@ func (s *Session) Loop(win *pixelgl.Window) common.Scene {
 		renderFingering(win) // TODO: pass here note that needs to be played
 	}
 	renderProgress(win, s.Duration/s.SongDuration)
-	renderScore(win, s.RoundedScore(), s.Finished())
+
+	if s.PlayToStart >= 1.0 {
+		renderScore(win, s.RoundedScore(), s.Finished())
+	} else if s.PlayToStart >= 0.8 {
+		renderMessage(win, "Let's go!")
+	} else {
+		renderMessage(win, "Play C for one second to start")
+	}
 
 	win.Update()
 	return s

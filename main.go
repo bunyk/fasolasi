@@ -8,8 +8,8 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 
-	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/game"
+	"github.com/bunyk/fasolasi/src/ui"
 )
 
 func run() {
@@ -29,7 +29,7 @@ func run() {
 	frames := 0
 	second := time.Tick(time.Second * 5)
 
-	var currentScene common.Scene
+	var currentScene ui.Scene
 	currentScene = &game.MainMenu{}
 	// currentScene = game.NewSession("A short one.txt", "challenge", 20)
 

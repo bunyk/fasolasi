@@ -4,8 +4,8 @@ package ui
 
 import (
 	"fmt"
+	"image/color"
 
-	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
@@ -47,12 +47,12 @@ func nextID() int {
 	return uistate.maxitem
 }
 
-func Label(win *pixelgl.Window, location pixel.Rect, value string) {
-	txt := text.New(location.Center(), common.TextAtlas)
-	txt.Color = config.ButtonTextColor
+func Label(win *pixelgl.Window, location pixel.Rect, value string, color color.Color) {
+	txt := text.New(location.Center(), TextAtlas)
+	txt.Color = color
 	txt.Dot.X -= txt.BoundsOf(value).W() / 2
-	txt.Dot.Y -= txt.BoundsOf(value).H() / 2
-	fmt.Fprintln(txt, value)
+	txt.Dot.Y -= txt.BoundsOf(value).H()/2 - 5
+	fmt.Fprint(txt, value)
 	txt.Draw(win, pixel.IM)
 }
 
@@ -91,7 +91,7 @@ func Button(win *pixelgl.Window, location pixel.Rect, label string) bool {
 	}
 	imd.Rectangle(0)
 	imd.Draw(win)
-	Label(win, location, label)
+	Label(win, location, label, config.ButtonTextColor)
 
 	// If button is hot and active, but mouse button is not
 	// down, the user must have clicked the button.

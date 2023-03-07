@@ -3,10 +3,10 @@ package game
 import (
 	"fmt"
 
-	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/ui"
 	"github.com/faiface/pixel/pixelgl"
+	"golang.org/x/image/colornames"
 )
 
 type FinishScene struct {
@@ -16,7 +16,7 @@ type FinishScene struct {
 	Score int
 }
 
-func (fs *FinishScene) Loop(win *pixelgl.Window) common.Scene {
+func (fs *FinishScene) Loop(win *pixelgl.Window) ui.Scene {
 	win.Clear(config.BackgroundColor)
 	renderFingering(win)
 	ui.Prepare()
@@ -24,7 +24,7 @@ func (fs *FinishScene) Loop(win *pixelgl.Window) common.Scene {
 
 	fl := ui.FlexRows(win.Bounds(), config.MenuButtonWidth, config.MenuButtonHeight, config.MenuVerticalSpacing, 4)
 
-	ui.Label(win, fl(0), fmt.Sprintf("Score: %d", fs.Score))
+	ui.Label(win, fl(0), fmt.Sprintf("Score: %d", fs.Score), colornames.Black)
 
 	if ui.Button(win, fl(1), "Retry") {
 		return NewSession(fs.Song, fs.Mode, fs.BPM)

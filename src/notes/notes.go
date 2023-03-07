@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/bunyk/fasolasi/src/config"
 )
@@ -17,9 +18,19 @@ type Pitch struct {
 	Height    float64 // Height (of rectangle representing key) in line intervals
 }
 
+func (p Pitch) Title() string {
+	t := strings.ToUpper(p.Name)
+	t = strings.ReplaceAll(t, "IS", "#")
+	t = strings.ReplaceAll(t, "ES", "b")
+	t = strings.ReplaceAll(t, "'", "")
+	return t
+}
+
+var C = Pitch{523.25, "c", -1, config.WhiteNoteWidth}
+
 var FluteRange []Pitch
 var octave = []Pitch{
-	{523.25, "c", -1, config.WhiteNoteWidth},
+	C,
 	{554.37, "cis", -0.75, config.BlackNoteWidth},
 	{587.33, "d", -0.5, config.WhiteNoteWidth},
 	{622.25, "dis", -0.25, config.BlackNoteWidth},

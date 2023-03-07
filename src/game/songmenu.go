@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/aquilax/truncate"
-	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/ui"
 	"github.com/faiface/pixel/pixelgl"
@@ -40,7 +39,7 @@ func cleanupName(fn string) string {
 	)
 }
 
-func (sm *SongMenu) Loop(win *pixelgl.Window) common.Scene {
+func (sm *SongMenu) Loop(win *pixelgl.Window) ui.Scene {
 	if win.Pressed(pixelgl.KeyEscape) {
 		return &MainMenu{}
 	}

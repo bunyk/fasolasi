@@ -3,7 +3,6 @@ package game
 import (
 	"fmt"
 
-	"github.com/bunyk/fasolasi/src/common"
 	"github.com/bunyk/fasolasi/src/config"
 	"github.com/bunyk/fasolasi/src/ui"
 	"github.com/faiface/pixel/pixelgl"
@@ -12,7 +11,7 @@ import (
 type MainMenu struct {
 }
 
-func (mm *MainMenu) Loop(win *pixelgl.Window) common.Scene {
+func (mm *MainMenu) Loop(win *pixelgl.Window) ui.Scene {
 	win.Clear(config.BackgroundColor)
 	renderFingering(win)
 
