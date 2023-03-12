@@ -26,7 +26,7 @@ There is no official roadmap, I just have some random ideas:
 - Training mode,
 	- Score should be proportional to extra time you spend on the song.
 - Animations:
-	- Thumb ups or thumbs down fly from note you play to the score, or something like that.
+	- Spawn less happy emojis when correct note is played
 	- Vibrate the note currently played? 
 	- Some ideas of visualizations from shadertoy?  https://github.com/faiface/pixel-examples/tree/master/community/seascape-shader ? 
 - Recording/creative mode. Make game listen to some music and just try to write down notes played, to create song file without text editing.

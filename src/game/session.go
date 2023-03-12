@@ -9,6 +9,7 @@ import (
 	"github.com/bunyk/fasolasi/src/ear"
 	"github.com/bunyk/fasolasi/src/notes"
 	"github.com/bunyk/fasolasi/src/ui"
+	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
 )
@@ -29,6 +30,7 @@ type Session struct {
 	LastUpdateTime   time.Time // time of last update
 	updateMode       func(dt float64, note notes.Pitch)
 	ear              *ear.Ear // For audio input
+	PointsParticles  *ParticleSystem
 }
 
 type playedNote struct {
@@ -43,12 +45,13 @@ func NewSession(filename, mode string, bpm int) ui.Scene {
 		log.Fatal(err)
 	}
 	s := &Session{
-		Played:   make([]playedNote, 0, 100),
-		Song:     append([]notes.SongNote{{Duration: 1.0, Time: -1.0, Pitch: notes.C}}, song...),
-		SongName: filename,
-		ModeName: mode,
-		BPM:      bpm,
-		ear:      ear.New(config.MicrophoneSampleRate, config.MicrophoneBufferLength),
+		Played:          make([]playedNote, 0, 100),
+		Song:            append([]notes.SongNote{{Duration: 1.0, Time: -1.0, Pitch: notes.C}}, song...),
+		SongName:        filename,
+		ModeName:        mode,
+		BPM:             bpm,
+		ear:             ear.New(config.MicrophoneSampleRate, config.MicrophoneBufferLength),
+		PointsParticles: NewParticleSystem("sprites/points.png", 32, 32),
 	}
 	if mode == "challenge" {
 		s.updateMode = s.challengeUpdate
@@ -185,6 +188,7 @@ func (s *Session) Loop(win *pixelgl.Window) ui.Scene {
 	}
 	s.currentlyPlaying, _ = notes.GuessNote(s.ear.Pitch)
 
+	lastScore := s.Score
 	if s.PlayToStart < 1.0 {
 		if s.currentlyPlaying == notes.C { // Play c for one second to start
 			s.PlayToStart += dt
@@ -201,12 +205,17 @@ func (s *Session) Loop(win *pixelgl.Window) ui.Scene {
 			s.updateMode(dt, s.currentlyPlaying)
 		}
 	}
+	sDiff := s.Score - lastScore
+	if sDiff > 0.01 { // Score increased
+		s.spawnPointsParticles(win)
+	}
 
 	// Rendering
 	win.Clear(config.BackgroundColor)
 	soundVisualization(win, colornames.Blue, s.ear.MicBuffer)
 	hightLightNote(win, colornames.Salmon, s.currentlyPlaying)
 	renderNoteLines(win)
+	s.PointsParticles.UpdateAndRender(win, dt)
 	renderNotes(win, s.Song, s.Played, s.Duration)
 	if config.ShowFingering {
 		renderFingering(win) // TODO: pass here note that needs to be played
@@ -223,6 +232,19 @@ func (s *Session) Loop(win *pixelgl.Window) ui.Scene {
 
 	win.Update()
 	return s
+}
+
+func (s *Session) spawnPointsParticles(win *pixelgl.Window) {
+	width := win.Bounds().W()
+	height := win.Bounds().H()
+	ybase := float64(height/2 - config.NoteRadius*4)
+	src := pixel.V(
+		width*config.TimeLinePositionLatency,
+		ybase+s.currentlyPlaying.Bottom*config.NoteRadius*2,
+	)
+	dst := pixel.V(0, height)
+
+	s.PointsParticles.Spawn(src, dst)
 }
 
 func (s Session) RoundedScore() int {
