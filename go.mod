@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/MarkKremer/microphone v1.1.0
+	github.com/aquilax/truncate v1.0.0
 	github.com/faiface/beep v1.1.0
 	github.com/faiface/pixel v0.10.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -13,7 +14,6 @@ require (
 )
 
 require (
-	github.com/aquilax/truncate v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.0 // indirect
 	github.com/faiface/glhf v0.0.0-20181018222622-82a6317ac380 // indirect
 	github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3 // indirect
