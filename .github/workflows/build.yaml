@@ -20,6 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev portaudio19-dev
           go get .
 
       - name: Test
