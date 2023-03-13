@@ -27,5 +27,5 @@ jobs:
         run: go test -v ./...
 
       - name: Build
-        run: go build main.go -o game
+        run: go build -o game main.go
 

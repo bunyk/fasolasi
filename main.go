@@ -30,9 +30,8 @@ func run() {
 	second := time.Tick(time.Second * 5)
 
 	var currentScene ui.Scene
-	// currentScene = &game.MainMenu{}
-	currentScene = game.NewSession("A short one.txt", "challenge", 20)
-	fmt.Println(currentScene)
+	currentScene = &game.MainMenu{}
+	// currentScene = game.NewSession("A short one.txt", "challenge", 20)
 
 	for !win.Closed() {
 		currentScene = currentScene.Loop(win)
