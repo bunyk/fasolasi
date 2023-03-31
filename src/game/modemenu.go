@@ -7,7 +7,7 @@ import (
 )
 
 type ModeMenu struct {
-	Song string
+	SongID int
 }
 
 func (mm *ModeMenu) Loop(win *pixelgl.Window) ui.Scene {
@@ -28,13 +28,13 @@ func (mm *ModeMenu) Loop(win *pixelgl.Window) ui.Scene {
 	}
 	switch choice {
 	case 0:
-		return NewSession(mm.Song, "training", 60)
+		return NewSession(mm.SongID, "training", 60)
 	case 1:
-		return NewSession(mm.Song, "challenge", 30)
+		return NewSession(mm.SongID, "challenge", 30)
 	case 2:
-		return NewSession(mm.Song, "challenge", 60)
+		return NewSession(mm.SongID, "challenge", 60)
 	case 3:
-		return NewSession(mm.Song, "challenge", 90)
+		return NewSession(mm.SongID, "challenge", 90)
 	case 4:
 		return &SongMenu{}
 	}

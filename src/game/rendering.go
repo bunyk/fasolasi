@@ -73,12 +73,12 @@ func renderNote(win *pixelgl.Window, time, width, ybase float64, colorful bool, 
 		imd.Color = rainbow[(10+int(note.Pitch.Bottom*4))%len(rainbow)]
 		textColor = oppositeColor(imd.Color)
 	} else {
-		if note.Pitch.Height >= 0.5 { // white key
+		if !note.Pitch.IsHalf { // white key
 			imd.Color = colornames.White
 			textColor = colornames.Black
 			imd.Push(
-				pixel.V(startX+1, ycenter-note.Pitch.Height*config.NoteRadius+1),
-				pixel.V(endX-1, ycenter+note.Pitch.Height*config.NoteRadius-1),
+				pixel.V(startX+1, ycenter-config.WhiteNoteWidth*config.NoteRadius+1),
+				pixel.V(endX-1, ycenter+config.WhiteNoteWidth*config.NoteRadius-1),
 			)
 			imd.Rectangle(0)
 			border = 2.0
@@ -86,8 +86,12 @@ func renderNote(win *pixelgl.Window, time, width, ybase float64, colorful bool, 
 		imd.Color = colornames.Black
 	}
 
-	corner1 := pixel.V(startX+1, ycenter-note.Pitch.Height*config.NoteRadius+1)
-	corner2 := pixel.V(endX-1, ycenter+note.Pitch.Height*config.NoteRadius-1)
+	height := config.WhiteNoteWidth
+	if note.Pitch.IsHalf {
+		height = config.BlackNoteWidth
+	}
+	corner1 := pixel.V(startX+1, ycenter-height*config.NoteRadius+1)
+	corner2 := pixel.V(endX-1, ycenter+height*config.NoteRadius-1)
 	imd.Push(corner1, corner2)
 	imd.Rectangle(border)
 	imd.Draw(win)
@@ -174,9 +178,14 @@ func hightLightNote(win *pixelgl.Window, color color.Color, note notes.Pitch) {
 	}
 	ycenter := ybase + note.Bottom*config.NoteRadius*2
 	imd.Color = color
+
+	height := config.WhiteNoteWidth
+	if note.IsHalf {
+		height = config.BlackNoteWidth
+	}
 	imd.Push(
-		pixel.V(0, ycenter-note.Height*config.NoteRadius+1),
-		pixel.V(width, ycenter+note.Height*config.NoteRadius-1),
+		pixel.V(0, ycenter-height*config.NoteRadius+1),
+		pixel.V(width, ycenter+height*config.NoteRadius-1),
 	)
 	imd.Rectangle(0)
 	imd.Draw(win)

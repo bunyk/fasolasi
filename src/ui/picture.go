@@ -1,16 +1,19 @@
 package ui
 
 import (
+	"embed"
 	"image"
-	"os"
 
 	_ "image/png"
 
 	"github.com/faiface/pixel"
 )
 
+//go:embed sprites/*
+var f embed.FS
+
 func LoadPicture(path string) (pixel.Picture, error) {
-	file, err := os.Open(path)
+	file, err := f.Open(path)
 	if err != nil {
 		return nil, err
 	}
