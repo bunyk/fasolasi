@@ -2,8 +2,6 @@ package game
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"strings"
 
 	"github.com/aquilax/truncate"
@@ -13,21 +11,11 @@ import (
 )
 
 type SongMenu struct {
-	Songs  []string
 	Offset int
 }
 
 func NewSongMenu() *SongMenu {
-	files, err := os.ReadDir(config.SongsFolder)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	songs := make([]string, len(files))
-	for i, file := range files {
-		songs[i] = file.Name()
-	}
-	return &SongMenu{Songs: songs}
+	return &SongMenu{}
 }
 
 func cleanupName(fn string) string {
@@ -62,16 +50,16 @@ func (sm *SongMenu) Loop(win *pixelgl.Window) ui.Scene {
 	// Last button is "Back", so for songs we have MenuMaxItems - haveButtons - 1 remaining buttons
 	limit := config.MenuMaxItems - haveButtons - 1
 	showDown := false
-	if sm.Offset+limit <= len(sm.Songs) { // we do not see end of the list, need "↓ Down" button
+	if sm.Offset+limit <= len(config.Songs) { // we do not see end of the list, need "↓ Down" button
 		showDown = true
 		limit -= 1 // need one more slot for "Down button"
 	} else {
-		limit = len(sm.Songs) - sm.Offset
+		limit = len(config.Songs) - sm.Offset
 	}
 
-	for _, song := range sm.Songs[sm.Offset : sm.Offset+limit] {
-		if ui.Button(win, fl(haveButtons), cleanupName(song)) {
-			return &ModeMenu{song}
+	for i, song := range config.Songs[sm.Offset : sm.Offset+limit] {
+		if ui.Button(win, fl(haveButtons), cleanupName(song.Name)) {
+			return &ModeMenu{sm.Offset + i}
 		}
 		haveButtons++
 	}

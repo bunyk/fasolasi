@@ -1,5 +1,0 @@
-c cis d dis e f fis g gis a bes b
-p
-c' cis' d' dis' e' f' fis' g' gis' a' bes' b'
-p
-c''

@@ -1,6 +1,0 @@
-d8 d2 e8 f2 a8 g2 d8 f2
-d'8 d'2 d'8 c'2 a8 g8 a2. p1
-
-d'8 d'2 d'8 c'2 a8 g8 g2 e8 f2
-d8 d2 d8 cis2 c8 e8 d2.
-
