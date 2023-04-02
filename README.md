@@ -7,12 +7,18 @@ Gameplay is inspired by Guitar Hero, Frets on Fire, Synthesia and similar games.
 [![Gameplay](./docs/screenshots/2023-03-04.png)](https://www.youtube.com/watch?v=-9oLTsaAoIM)
 
 ## Editing songs
-Songs currently are written in plain text files using [LilyPond-like](http://lilypond.org/doc/v2.18/Documentation/notation/writing-pitches) simplified notation. Example:
+When game starts, it reads config from `config.yaml` file, located in the same folder as executable. When the file does not exist, it is created on the first start of the game. You could edit it to add more songs. Just list all the notes using [LilyPond-like](http://lilypond.org/doc/v2.18/Documentation/notation/writing-pitches) simplified notation. Example of the config file:
 
-```
-g4. a8 g4 e2.
-g4. a8 g4 e2.
-d'2 d'4 b2.
+```yaml
+background_color: antiquewhite
+songs:
+  - name: A short one
+    notes: "c cis d"
+
+  - name: Grün, grün, grün sind alle meine Kleider
+    notes: >
+      f4 f g g e8 e d e f4 c
+      f4 f g g e8 e d e f4 p
 ```
 
 Notes are separated by whitespace, pitch is marked by letter, from c to b. `'` character means to go one octave up. Lowest note is `c`, highest - `c''`. Duration is defined by number, 2 means half note, 4 means quarter, etc. Dot means to extend note by half of it's duration. If duration is not given - it defaults to 1/4 or duration of previous note.
